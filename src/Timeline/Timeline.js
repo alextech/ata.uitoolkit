@@ -136,14 +136,9 @@ import style from './Timeline.scss';
 const timelineTpl = document.createElement('template');
 timelineTpl.innerHTML =
 `
-  <div id="timeline">
-      <template id="gridTemplate">
-        <div class="period even" style="grid-row: 1/5;"></div>
-        <div class="age" style="grid-row: 5/6"></div>
-        <div class="year even" style="grid-row: 6/7;"></div>
-      </template>
-    
-  </div>
+<div class="period even" style="grid-row: 1/5;"></div>
+<div class="age" style="grid-row: 5/6"></div>
+<div class="year even" style="grid-row: 6/7;"></div>
 `;
 
 let gridTemplate;
@@ -158,10 +153,8 @@ export default class Timeline extends HTMLElement {
     super();
 
     this.attachShadow({mode: 'open'});
-    const mainTpl = timelineTpl.content.cloneNode(true);
-    gridTemplate = mainTpl.querySelector('#gridTemplate').content;
+    gridTemplate = timelineTpl.content;
 
-    this.shadowRoot.appendChild(mainTpl);
     this.shadowRoot.adoptedStyleSheets = [style];
   }
 
@@ -185,10 +178,9 @@ export default class Timeline extends HTMLElement {
   // #setupGrid(years) {
   #setupGrid() {
     const years = this.getAttribute('years');
-    const timelineRoot = this.shadowRoot.getElementById('timeline');
-    timelineRoot.style.setProperty('--years', years);
 
-    timelineRoot.innerHTML = '';
+    this.shadowRoot.host.style.setProperty('--years', years);
+    this.shadowRoot.innerHTML = '';
 
     const tmpFragment = document.createDocumentFragment();
     const periodTpl = gridTemplate.firstElementChild;
@@ -221,7 +213,7 @@ export default class Timeline extends HTMLElement {
       tmpFragment.appendChild(yearCell);
     }
 
-    timelineRoot.append(tmpFragment);
+    this.shadowRoot.append(tmpFragment);
   }
 
   #updateAge(age) {
