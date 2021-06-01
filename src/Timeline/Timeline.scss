@@ -11,12 +11,12 @@
   font-family: Arial,sans-serif;
   width: fit-content;
 
-  //.period:nth-child(even),
+  .period:nth-child(even),
   .even {
     background-color: #f6f6f6;
   }
 
-  //.period:nth-child(odd),
+  .period:nth-child(odd),
   .odd {
     background-color: #d0d0d0;
   }
