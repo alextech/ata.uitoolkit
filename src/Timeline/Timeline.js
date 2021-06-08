@@ -136,26 +136,45 @@ import style from './Timeline.scss';
 const timelineTpl = document.createElement('template');
 timelineTpl.innerHTML =
 `
-<div class="period even" style="grid-row: 1/5;"></div>
+<div class="period" style="grid-row: 1/5;"></div>
 <div class="age" style="grid-row: 5/6"></div>
-<div class="year even" style="grid-row: 6/7;"></div>
+<div class="year" style="grid-row: 6/7;"></div>
 `;
 
-let gridTemplate;
+const eventTpl = document.createElement('template');
+eventTpl.innerHTML = `
+<div class="existingGoal">
+  <div class="goalLeft">&nbsp;</div>
+  
+  <div class="goal">&nbsp;</div>
+  
+  <div class="goalRight"
+     draggable="true"
+ 
+  
+     ondragover="event.preventDefault();">&nbsp;</div>
+</div>
+`;
 
-export default class Timeline extends HTMLElement {
-
+class Timeline extends HTMLElement {
   static get observedAttributes() {
-    return ['years', 'startingYear', 'age'];
+    return ['years', 'startingyear', 'age'];
   }
+
+  #previousYears;
 
   constructor() {
     super();
 
     this.attachShadow({mode: 'open'});
-    gridTemplate = timelineTpl.content;
-
     this.shadowRoot.adoptedStyleSheets = [style];
+  }
+
+  connectedCallback() {
+    this.observer = new MutationObserver(this.#renderEvents.bind(this));
+    this.observer.observe(this, {childList: true});
+
+    this.#renderEvents();
   }
 
   attributeChangedCallback(attribute, oldValue, newValue) {
@@ -163,70 +182,88 @@ export default class Timeline extends HTMLElement {
 
     switch (attribute) {
       case 'years':
-
         this.#setupGrid(parseInt(newValue));
+
         break;
 
       case 'age':
-        this.#updateAge(parseInt(newValue));
+        Timeline.#updateAge(parseInt(newValue), this.shadowRoot);
+
+        break;
+
+      case 'startingyear':
+        Timeline.#updateStartingYear(parseInt(newValue), this.shadowRoot);
 
         break;
     }
   }
 
-
-  // #setupGrid(years) {
-  #setupGrid() {
-    const years = this.getAttribute('years');
-
+  #setupGrid(years) {
     this.shadowRoot.host.style.setProperty('--years', years);
-    this.shadowRoot.innerHTML = '';
 
     const tmpFragment = document.createDocumentFragment();
-    const periodTpl = gridTemplate.firstElementChild;
-    const ageTpl = periodTpl.nextElementSibling;
-    const yearTpl = ageTpl.nextElementSibling;
 
-    for (let i = 1; i <= years; i++) {
-      tmpFragment.appendChild(periodTpl.cloneNode());
+    for (let i = 0; i < years; i++) {
+      tmpFragment.appendChild(timelineTpl.content.cloneNode(true));
     }
 
-    let currentAge = parseInt(this.getAttribute('age'));
-    for (let i = 1; i <= years; i++) {
-      const ageCell = ageTpl.cloneNode();
-      if (i % 2 === 0) {
-        ageCell.innerText = "\u00A0";
-      } else {
-        ageCell.innerText = currentAge;
-      }
-      currentAge++;
-
-      tmpFragment.appendChild(ageCell);
+    const periods = tmpFragment.querySelectorAll('.period');
+    let i = 1;
+    for (const period of periods) {
+      period.style.setProperty('grid-column', `${i} / ${++i}`);
     }
 
-    let currentYear = parseInt(this.getAttribute('startingYear'));
-    for (let i = 1; i <= years; i++) {
-      const yearCell = yearTpl.cloneNode();
-      yearCell.classList.add(i % 2 === 0 ? 'even' : 'odd');
-      yearCell.innerText = currentYear;
+    if (this.#previousYears !== years) {
+      Timeline.#updateAge(this.age, tmpFragment);
+      Timeline.#updateStartingYear(this.startingYear, tmpFragment);
 
-      tmpFragment.appendChild(yearCell);
+      this.#previousYears = years;
     }
 
-    this.shadowRoot.append(tmpFragment);
+    this.shadowRoot.replaceChildren(tmpFragment);
   }
 
-  #updateAge(age) {
-    const ageNodes = this.shadowRoot.querySelectorAll('.age');
+  static #updateAge(age, rootNode) {
+    const ageNodes = rootNode.querySelectorAll('.age');
 
+    let currentAge = age;
     let i = 0;
     for (const ageNode of ageNodes) {
       if (i % 2 === 0) {
-        ageNode.innerText = age;
+        ageNode.innerText = currentAge;
+      } else {
+        ageNode.innerText = "\u00A0";
       }
 
       i++;
-      age++;
+      currentAge++;
+    }
+  }
+
+  static #updateStartingYear(year, rootNode) {
+    const yearNodes = rootNode.querySelectorAll('.year');
+
+    let currentYear = year;
+    for (const yearNode of yearNodes) {
+      yearNode.innerText = currentYear;
+
+      currentYear++;
+    }
+  }
+
+  #renderEvents() {
+    const events = this.getElementsByTagName('ata-timeline-event');
+
+    for (const event of events) {
+      const eventFragment = eventTpl.content.cloneNode(true);
+      const eventNode = eventFragment.firstElementChild;
+
+      const startColumn = parseInt(event.getAttribute('start')) - this.startingYear;
+      const endColumn = parseInt(event.getAttribute('end')) - this.startingYear;
+      eventNode.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
+      eventNode.style.setProperty('grid-row', '3 / 4');
+
+      this.shadowRoot.appendChild(eventFragment);
     }
   }
 
@@ -235,15 +272,7 @@ export default class Timeline extends HTMLElement {
   }
 
   get years() {
-    return this.getAttribute('years');
-  }
-
-  set startingYear(startingYear) {
-    this.setAttribute('startingYear', startingYear);
-  }
-
-  get startingYear() {
-    return this.getAttribute('startingYear');
+    return parseInt(this.getAttribute('years'));
   }
 
   set age(age) {
@@ -251,7 +280,15 @@ export default class Timeline extends HTMLElement {
   }
 
   get age() {
-    return this.getAttribute('age');
+    return parseInt(this.getAttribute('age'));
+  }
+
+  set startingYear(year) {
+    this.setAttribute('startingYear', year);
+  }
+
+  get startingYear() {
+    return parseInt(this.getAttribute('startingYear'));
   }
 }
 

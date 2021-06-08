@@ -12,12 +12,12 @@
   width: fit-content;
 
   .period:nth-child(even),
-  .even {
+  .year:nth-child(even) {
     background-color: #f6f6f6;
   }
 
   .period:nth-child(odd),
-  .odd {
+  .year:nth-child(odd) {
     background-color: #d0d0d0;
   }
 
@@ -55,7 +55,6 @@
   }
 
   $goalHeight: 2em;
-
   .goal {
     background-color: cornflowerblue;
     height: $goalHeight;
