@@ -154,6 +154,10 @@ eventTpl.innerHTML = `
   
      ondragover="event.preventDefault();">&nbsp;</div>
 </div>
+
+<div class="goalIcon lengthClass">
+    <img src="" alt="" />
+</div>
 `;
 
 class Timeline extends HTMLElement {
@@ -257,11 +261,18 @@ class Timeline extends HTMLElement {
     for (const event of events) {
       const eventFragment = eventTpl.content.cloneNode(true);
       const eventNode = eventFragment.firstElementChild;
+      const iconNode = eventNode.nextElementSibling;
 
       const startColumn = parseInt(event.getAttribute('start')) - this.startingYear;
       const endColumn = parseInt(event.getAttribute('end')) - this.startingYear;
       eventNode.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
-      eventNode.style.setProperty('grid-row', '3 / 4');
+      eventNode.style.setProperty('grid-row', '4 / 5');
+
+
+      const iconColumn = Math.floor(startColumn + (endColumn - startColumn) / 2);
+      iconNode.style.setProperty('grid-column', `${iconColumn} / ${iconColumn + 1}`);
+      iconNode.style.setProperty('grid-row', '3 / 4');
+      iconNode.firstElementChild.src = event.getAttribute('icon');
 
       this.shadowRoot.appendChild(eventFragment);
     }

@@ -1,4 +1,5 @@
 import '../src/Timeline';
+import event_1_Icon from './assets/dollar.png';
 
 export default {
   title: 'ATA/Timeline',
@@ -21,7 +22,7 @@ const TimelineWithEventTemplate = (args) => `
     startingYear="${args.startingYear}"
     age="${args.age}"
 >
-    <ata-timeline-event start="${args.eventStart}" end="${args.eventEnd}" />
+    <ata-timeline-event start="${args.eventStart}" end="${args.eventEnd}" icon="${args.icon}" />
 </ata-timeline>`;
 
 export const EmptyTimeline = EmptyTemplate.bind({});
@@ -38,5 +39,7 @@ TimelineWithEvent.args = {
   startingYear: 2021,
 
   eventStart: 2025,
-  eventEnd: 2034
+  eventEnd: 2034,
+
+  icon: event_1_Icon
 };
