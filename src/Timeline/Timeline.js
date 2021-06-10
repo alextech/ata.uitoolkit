@@ -2,137 +2,6 @@
 
 import style from './Timeline.scss';
 
-/*
-
-<div id="timeline"
-         style="
-              grid-template-columns: repeat(@numColumns, minmax(1.4em, 1em));
-              grid-template-rows: repeat(4, 3em) 1em 3em;
-        "
-         >
-
-        @* // CSS Grid is 1-based, not 0-based *@
-        @for (int i = 1; i <= numColumns + 1; i++)
-        {
-            <div class="period" style="grid-column: @i; grid-row: 1/5;"></div>
-        }
-
-        @for (int i = 1; i <= numColumns + 1; i++)
-        {
-            int yearColumn = i;
-            <div class="dropTarget"
-                 style="grid-column: @i; grid-row: 1/5;"
-                 draggable="true"
-
-                 @ondragstart="@(() => OnNewProfileDragStart(yearColumn))"
-
-                 @onclick="@(() => OnNewProfileClicked(yearColumn))"
-
-                 @ondrop="@(() => _columnDropHandler(yearColumn))"
-                 @ondragenter="@(() => OnYearEnter(yearColumn))"
-                 ondragover="event.preventDefault();"
-            ></div>
-        }
-
-        @if (_isNewProfileDragging)
-        {
-            int columnStart;
-            int columnEnd;
-
-            if (_currentDragColumn < _startDragAt)
-            {
-                columnStart = _currentDragColumn;
-                columnEnd = _startDragAt + 1;
-            }
-            else
-            {
-                columnStart = _startDragAt;
-                columnEnd = _currentDragColumn + 1;
-            }
-            <div class="goal"
-                 style="grid-column: @(columnStart) / @(columnEnd); grid-row: 4/5; "
-            >&nbsp;</div>
-        }
-
-        @{
-            int primaryYears = CurrentYear + PrimaryLifespan - PrimaryAge;
-            int jointYears = JointAge > 0 ? CurrentYear + JointLifespan - JointAge : 0;
-            int maxYear = primaryYears > jointYears ? primaryYears : jointYears;
-        }
-
-        @{
-            int row = 4;
-        }
-        @foreach (Profile profile in PrimaryClient.Profiles)
-        {
-            int start = profile.Meta.GoalStart - CurrentYear + 1;
-            int end;
-
-            if (!_isResizeDragging)
-            {
-                end = profile.Meta.GoalEnd - CurrentYear + 1;
-            }
-            else
-            {
-                end = _currentDragColumn;
-            }
-
-            string lengthClass = "";
-            if (start != end && (start - end) % 2 == 0)
-            {
-                lengthClass = "evenLength";
-            }
-
-            <div class="existingGoal" style="grid-column: @start / @end; grid-row: @row / @(row + 1)">
-
-                <div class="goalLeft">&nbsp;</div>
-
-                <div class="goal @(!_isResizeDragging ? "aboveDropTarget" : "")">&nbsp;</div>
-
-                <div class="goalRight"
-                     draggable="true"
-
-                     @ondragstart="@(() => RightResizeDrag(profile.Guid, end))"
-                     @ondragend="@OnDragEnd"
-
-                     ondragover="event.preventDefault();">&nbsp;</div>
-
-            </div>
-
-            int iconColumn = start + (end - start) / 2;
-            <div class="goalIcon @lengthClass" style="grid-column: @iconColumn / @(iconColumn + 1); grid-row: @(row - 1) / @row">
-                <img src="/_content/KycViewer/icons/@(profile.Meta.Icon).png" alt="@profile.Name" />
-            </div>
-
-            // @TODO decrement only when overlap
-            // row -= 2;
-        }
-
-
-        @for (int i = PrimaryAge; i <= PrimaryLifespan; i++)
-        {
-            @if (i % 2 == 0)
-            {
-                <div class="age" style="grid-row: 5/6">@i</div>
-            }
-            else
-            {
-                <div class="age" style="grid-row: 5/6">&nbsp;</div>
-            }
-
-        }
-
-        @{
-            int column = 1;
-        }
-        @for (int i = CurrentYear; i <= maxYear; i++)
-        {
-            <div class="year @(i%2==0 ? "even" : "odd")" style="grid-column: @column; grid-row: 6/7;">@i</div>
-            column++;
-        }
-    </div>
- */
-
 const timelineTpl = document.createElement('template');
 timelineTpl.innerHTML =
 `
@@ -141,31 +10,13 @@ timelineTpl.innerHTML =
 <div class="year" style="grid-row: 6/7;"></div>
 `;
 
-const eventTpl = document.createElement('template');
-eventTpl.innerHTML = `
-<div class="existingGoal">
-  <div class="goalLeft">&nbsp;</div>
-  
-  <div class="goal">&nbsp;</div>
-  
-  <div class="goalRight"
-     draggable="true"
- 
-  
-     ondragover="event.preventDefault();">&nbsp;</div>
-</div>
-
-<div class="goalIcon lengthClass">
-    <img src="" alt="" />
-</div>
-`;
-
 class Timeline extends HTMLElement {
   static get observedAttributes() {
     return ['years', 'startingyear', 'age'];
   }
 
   #previousYears;
+  #dragChildEvent = false;
 
   constructor() {
     super();
@@ -217,6 +68,26 @@ class Timeline extends HTMLElement {
       period.style.setProperty('grid-column', `${i} / ${++i}`);
     }
 
+
+    const that = this;
+    for (let i = 1; i <= years; i++) {
+      const column = i;
+      // <div class="dropTarget" style="grid-row: 1/5;" draggable="true" />
+      const dropTarget = document.createElement('div');
+      dropTarget.className = 'dropTarget';
+      dropTarget.style.setProperty('grid-column', `${column}`);
+      dropTarget.style.setProperty('grid-row', '1 / 5');
+      dropTarget.draggable = true;
+
+      dropTarget.addEventListener('dragenter', (e) => e.preventDefault());
+      dropTarget.addEventListener('dragover', (e) => e.preventDefault());
+      dropTarget.addEventListener('drop', (e) => {
+        console.log("Dropped", e, that.#dragChildEvent);
+      });
+
+      tmpFragment.appendChild(dropTarget);
+    }
+
     if (this.#previousYears !== years) {
       Timeline.#updateAge(this.age, tmpFragment);
       Timeline.#updateStartingYear(this.startingYear, tmpFragment);
@@ -225,6 +96,11 @@ class Timeline extends HTMLElement {
     }
 
     this.shadowRoot.replaceChildren(tmpFragment);
+
+
+    const slot = document.createElement('slot');
+    slot.setAttribute('name', 'events');
+    this.shadowRoot.appendChild(slot);
   }
 
   static #updateAge(age, rootNode) {
@@ -258,23 +134,24 @@ class Timeline extends HTMLElement {
   #renderEvents() {
     const events = this.getElementsByTagName('ata-timeline-event');
 
+    const that = this;
     for (const event of events) {
-      const eventFragment = eventTpl.content.cloneNode(true);
-      const eventNode = eventFragment.firstElementChild;
-      const iconNode = eventNode.nextElementSibling;
-
       const startColumn = parseInt(event.getAttribute('start')) - this.startingYear;
       const endColumn = parseInt(event.getAttribute('end')) - this.startingYear;
-      eventNode.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
-      eventNode.style.setProperty('grid-row', '4 / 5');
+      event.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
+      event.style.setProperty('grid-row', '4 / 5');
+      event.style.setProperty('z-index', 101);
 
+      event.addEventListener('moveStart', (e) => {
+        console.log('move started');
 
-      const iconColumn = Math.floor(startColumn + (endColumn - startColumn) / 2);
-      iconNode.style.setProperty('grid-column', `${iconColumn} / ${iconColumn + 1}`);
-      iconNode.style.setProperty('grid-row', '3 / 4');
-      iconNode.firstElementChild.src = event.getAttribute('icon');
+        that.#dragChildEvent = true;
+      });
+      event.addEventListener('moveEnd', (e) => {
+        console.log('move end');
 
-      this.shadowRoot.appendChild(eventFragment);
+        that.#dragChildEvent = false;
+      });
     }
   }
 

@@ -22,7 +22,7 @@ const TimelineWithEventTemplate = (args) => `
     startingYear="${args.startingYear}"
     age="${args.age}"
 >
-    <ata-timeline-event start="${args.eventStart}" end="${args.eventEnd}" icon="${args.icon}" />
+    <ata-timeline-event start="${args.eventStart}" end="${args.eventEnd}" icon="${args.icon}" slot="events" />
 </ata-timeline>`;
 
 export const EmptyTimeline = EmptyTemplate.bind({});

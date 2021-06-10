@@ -1,0 +1,74 @@
+:host {
+  $goalHeight: 2em;
+
+  .goal {
+    background-color: cornflowerblue;
+    height: $goalHeight;
+  }
+
+  .existingGoal {
+    display: grid;
+    grid-template-columns: 0.2em 1fr 0.2em;
+    grid-template-rows: $goalHeight;
+
+    .goal {
+      grid-column: 2/3;
+      grid-row: 1;
+
+      display: flex;
+
+      .dragHandler {
+        width: 1.4em;
+        cursor: move;
+
+        :first-child {
+          width: 1.2em;
+        }
+
+        :last-child {
+          width: 1.2em;
+        }
+
+      }
+    }
+
+    .goalLeft {
+      grid-column: 1/2;
+    }
+
+    .goalRight {
+      grid-column: 3/4;
+    }
+
+    .goalLeft,
+    .goalRight {
+      grid-row: 1;
+      z-index: 102;
+      cursor: col-resize;
+
+      background-color: red;
+    }
+  }
+
+  .goalIcon {
+
+    img {
+      border: 1px solid #1F585F;
+      margin: auto auto auto -0.5em;
+      display: block;
+      padding: 0;
+      text-align: center;
+      background-color: darkseagreen;
+      width: 2.3em;
+    }
+
+    &:after {
+      content: " ";
+      background-color: #1F585F;
+      display: block;
+      width: 1px;
+      height: 10px;
+      margin: 0 auto;
+    }
+  }
+}
