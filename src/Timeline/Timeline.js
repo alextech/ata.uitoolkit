@@ -16,7 +16,7 @@ class Timeline extends HTMLElement {
   }
 
   #previousYears;
-  #dragChildEvent = false;
+  dragChildEvent = null;
 
   constructor() {
     super();
@@ -82,7 +82,18 @@ class Timeline extends HTMLElement {
       dropTarget.addEventListener('dragenter', (e) => e.preventDefault());
       dropTarget.addEventListener('dragover', (e) => e.preventDefault());
       dropTarget.addEventListener('drop', (e) => {
-        console.log("Dropped", e, that.#dragChildEvent);
+        console.log("Dropped", e, that.dragChildEvent);
+
+        if (that.dragChildEvent != null) {
+          const originalColumn = that.dragChildEvent.detail.handleIndex + that.dragChildEvent.detail.startOffset - that.startingYear;
+
+          const diff = column - originalColumn;
+          const newStart = parseInt(that.dragChildEvent.target.getAttribute('start')) + diff;
+          const newEnd = parseInt(that.dragChildEvent.target.getAttribute('end')) + diff;
+
+          that.dragChildEvent.target.setAttribute('start', newStart);
+          that.dragChildEvent.target.setAttribute('end', newEnd)
+        }
       });
 
       tmpFragment.appendChild(dropTarget);
@@ -136,8 +147,8 @@ class Timeline extends HTMLElement {
 
     const that = this;
     for (const event of events) {
-      const startColumn = parseInt(event.getAttribute('start')) - this.startingYear;
-      const endColumn = parseInt(event.getAttribute('end')) - this.startingYear;
+      const startColumn = parseInt(event.getAttribute('start')) - this.startingYear + 1;
+      const endColumn = parseInt(event.getAttribute('end')) - this.startingYear + 1;
       event.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
       event.style.setProperty('grid-row', '4 / 5');
       event.style.setProperty('z-index', 101);
@@ -145,12 +156,14 @@ class Timeline extends HTMLElement {
       event.addEventListener('moveStart', (e) => {
         console.log('move started');
 
-        that.#dragChildEvent = true;
+        that.dragChildEvent = e;
       });
       event.addEventListener('moveEnd', (e) => {
-        console.log('move end');
+        const startColumn = parseInt(event.getAttribute('start')) - that.startingYear;
+        const endColumn = parseInt(event.getAttribute('end')) - that.startingYear;
+        event.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
 
-        that.#dragChildEvent = false;
+        that.dragChildEvent = null;
       });
     }
   }

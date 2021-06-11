@@ -8,7 +8,7 @@ eventTpl.innerHTML = `
 <div class="existingGoal" style="height: 2em; background-color: cornflowerblue">
   <div class="goalLeft">&nbsp;</div>
   
-  <div class="goal">&nbsp;</div>
+  <div class="goal"></div>
   
   <div class="goalRight"
      draggable="true"
@@ -51,8 +51,12 @@ export default class Event extends HTMLElement {
       dragNode.draggable = true;
 
       const that = this;
+      const handleIndex = i;
       dragNode.addEventListener('dragstart', (e) => {
-        that.dispatchEvent(new CustomEvent('moveStart'));
+        that.dispatchEvent(new CustomEvent('moveStart', {detail: {
+            handleIndex: handleIndex,
+            startOffset: parseInt(that.getAttribute('start'))
+        }}));
       });
 
       dragNode.addEventListener('dragend', (e) => {

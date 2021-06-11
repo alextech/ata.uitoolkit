@@ -21,11 +21,11 @@
         width: 1.4em;
         cursor: move;
 
-        :first-child {
+        &:first-child {
           width: 1.2em;
         }
 
-        :last-child {
+        &:last-child {
           width: 1.2em;
         }
 
