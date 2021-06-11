@@ -67,9 +67,6 @@ class Timeline extends HTMLElement {
     for (const period of periods) {
       period.style.setProperty('grid-column', `${i} / ${++i}`);
     }
-
-
-    const that = this;
     for (let i = 1; i <= years; i++) {
       const column = i;
       // <div class="dropTarget" style="grid-row: 1/5;" draggable="true" />
@@ -78,22 +75,23 @@ class Timeline extends HTMLElement {
       dropTarget.style.setProperty('grid-column', `${column}`);
       dropTarget.style.setProperty('grid-row', '1 / 5');
       dropTarget.draggable = true;
+      dropTarget.dataset.column = column+'';
 
-      dropTarget.addEventListener('dragenter', (e) => e.preventDefault());
-      dropTarget.addEventListener('dragover', (e) => e.preventDefault());
-      dropTarget.addEventListener('drop', (e) => {
-        console.log("Dropped", e, that.dragChildEvent);
+      dropTarget.addEventListener('dragenter', (e) => {
+        e.preventDefault();
 
-        if (that.dragChildEvent != null) {
-          const originalColumn = that.dragChildEvent.detail.handleIndex + that.dragChildEvent.detail.startOffset - that.startingYear;
-
-          const diff = column - originalColumn;
-          const newStart = parseInt(that.dragChildEvent.target.getAttribute('start')) + diff;
-          const newEnd = parseInt(that.dragChildEvent.target.getAttribute('end')) + diff;
-
-          that.dragChildEvent.target.setAttribute('start', newStart);
-          that.dragChildEvent.target.setAttribute('end', newEnd)
+        if (this.dragChildEvent != null) {
+          this.#updateEventBoundaries(parseInt(e.target.dataset.column));
         }
+      });
+      dropTarget.addEventListener('dragover', (e) => {
+
+
+        e.preventDefault();
+      });
+      dropTarget.addEventListener('drop', (e) => {
+        console.log("Dropped", e, this.dragChildEvent);
+
       });
 
       tmpFragment.appendChild(dropTarget);
@@ -159,13 +157,27 @@ class Timeline extends HTMLElement {
         that.dragChildEvent = e;
       });
       event.addEventListener('moveEnd', (e) => {
-        const startColumn = parseInt(event.getAttribute('start')) - that.startingYear;
-        const endColumn = parseInt(event.getAttribute('end')) - that.startingYear;
-        event.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
-
         that.dragChildEvent = null;
       });
     }
+  }
+
+  #updateEventBoundaries(targetColumn) {
+    const e = this.dragChildEvent;
+    const originalColumn = e.detail.handleIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
+
+    const diff = targetColumn - originalColumn;
+
+    const newStart = parseInt(e.target.getAttribute('start')) + diff;
+    const newEnd = parseInt(e.target.getAttribute('end')) + diff;
+
+    e.target.setAttribute('start', newStart);
+    e.target.setAttribute('end', newEnd);
+
+    const newStartCol = newStart - this.startingYear;
+    const newEndCol = newEnd - this.startingYear;
+
+    e.target.style.setProperty('grid-column', `${newStartCol} / ${newEndCol}`);
   }
 
   set years(years) {

@@ -55,7 +55,6 @@ export default class Event extends HTMLElement {
       dragNode.addEventListener('dragstart', (e) => {
         that.dispatchEvent(new CustomEvent('moveStart', {detail: {
             handleIndex: handleIndex,
-            startOffset: parseInt(that.getAttribute('start'))
         }}));
       });
 
