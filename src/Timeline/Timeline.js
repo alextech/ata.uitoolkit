@@ -16,6 +16,7 @@ class Timeline extends HTMLElement {
   }
 
   #previousYears;
+  #maxYear;
   dragChildEvent = null;
 
   constructor() {
@@ -96,6 +97,7 @@ class Timeline extends HTMLElement {
 
       tmpFragment.appendChild(dropTarget);
     }
+    this.#maxYear = years + this.startingYear - 1;
 
     if (this.#previousYears !== years) {
       Timeline.#updateAge(this.age, tmpFragment);
@@ -146,7 +148,7 @@ class Timeline extends HTMLElement {
     const that = this;
     for (const event of events) {
       const startColumn = parseInt(event.getAttribute('start')) - this.startingYear + 1;
-      const endColumn = parseInt(event.getAttribute('end')) - this.startingYear + 1;
+      const endColumn = parseInt(event.getAttribute('end')) - this.startingYear + 2;
       event.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
       event.style.setProperty('grid-row', '4 / 5');
       event.style.setProperty('z-index', 101);
@@ -159,25 +161,44 @@ class Timeline extends HTMLElement {
       event.addEventListener('moveEnd', (e) => {
         that.dragChildEvent = null;
       });
+
+      event.addEventListener('startchanged', (e) => {
+        console.log('start changed', e);
+
+        const newStartCol = e.detail.start - that.startingYear + 1;
+        e.target.style.setProperty('grid-column-start', newStartCol);
+      });
+
+      event.addEventListener('endchanged', (e) => {
+        console.log('start changed', e);
+
+        // offset extra + 1 for CSS grid column end
+        const newStartCol = e.detail.end - that.startingYear + 2;
+        e.target.style.setProperty('grid-column-end', newStartCol);
+      });
     }
   }
 
   #updateEventBoundaries(targetColumn) {
     const e = this.dragChildEvent;
+    const originalDuration = e.target.duration;
     const originalColumn = e.detail.handleIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
 
     const diff = targetColumn - originalColumn;
 
-    const newStart = parseInt(e.target.getAttribute('start')) + diff;
-    const newEnd = parseInt(e.target.getAttribute('end')) + diff;
+    if (diff === 0) {
+      return;
+    }
+
+    let newStart = parseInt(e.target.getAttribute('start')) + diff;
+    let newEnd = parseInt(e.target.getAttribute('end')) + diff;
+
+    if (newStart < this.startingYear || newEnd > this.#maxYear) {
+      return;
+    }
 
     e.target.setAttribute('start', newStart);
     e.target.setAttribute('end', newEnd);
-
-    const newStartCol = newStart - this.startingYear;
-    const newEndCol = newEnd - this.startingYear;
-
-    e.target.style.setProperty('grid-column', `${newStartCol} / ${newEndCol}`);
   }
 
   set years(years) {

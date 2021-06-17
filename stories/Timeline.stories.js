@@ -39,7 +39,7 @@ TimelineWithEvent.args = {
   startingYear: 2021,
 
   eventStart: 2025,
-  eventEnd: 2034,
+  eventEnd: 2033,
 
   icon: event_1_Icon
 };

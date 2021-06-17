@@ -22,7 +22,7 @@ eventTpl.innerHTML = `
 
 export default class Event extends HTMLElement {
   static get observedAttributes() {
-    return [];
+    return ['start', 'end'];
   }
 
   constructor() {
@@ -43,9 +43,10 @@ export default class Event extends HTMLElement {
     icon.style.setProperty('grid-column', `${iconColumn} / ${iconColumn + 1}`);
 
     const goalNode = this.shadowRoot.querySelector('.goal');
-    const numCols = parseInt(this.getAttribute('end')) - parseInt(this.getAttribute('start'));
+    const numCols = parseInt(this.getAttribute('end')) - parseInt(this.getAttribute('start')) + 1;
 
-    for (let i = 0; i < numCols; i++) {
+    // keep 1-based to be consistent with CSS grid columns
+    for (let i = 1; i <= numCols; i++) {
       const dragNode = document.createElement('div');
       dragNode.className = 'dragHandler';
       dragNode.draggable = true;
@@ -68,6 +69,43 @@ export default class Event extends HTMLElement {
     // this.shadowRoot.querySelectorAll('.goalRight')[0].addEventListener('dragstart',  (e) => {
     //   e.preventDefault();
     // });
+  }
+
+  attributeChangedCallback(attribute, oldValue, newValue) {
+    if (oldValue === newValue) return;
+
+    switch (attribute) {
+      case 'start':
+        // TODO if not moving everything
+        this.dispatchEvent(new CustomEvent("startchanged", {detail: {start: newValue}}));
+
+        break;
+      case 'end':
+        // TODO if not moving everything
+        this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}}));
+
+        break;
+    }
+  }
+
+  set start(start) {
+    this.setAttribute('start', start);
+  }
+
+  get start() {
+    return parseInt(this.getAttribute('start'));
+  }
+
+  set end(end) {
+    this.setAttribute('end', end);
+  }
+
+  get end() {
+    return parseInt(this.getAttribute('end'));
+  }
+
+  get duration() {
+    return this.end - this.start + 1;
   }
 
 }
