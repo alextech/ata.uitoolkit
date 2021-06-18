@@ -20,6 +20,7 @@
       .dragHandler {
         width: 1.4em;
         cursor: move;
+        opacity: 0;
 
         &:first-child {
           width: 1.2em;

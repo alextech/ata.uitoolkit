@@ -30,6 +30,11 @@ class Timeline extends HTMLElement {
     this.observer = new MutationObserver(this.#renderEvents.bind(this));
     this.observer.observe(this, {childList: true});
 
+    // TODO tmp test
+    // this.addEventListener('EventChanged', (e) => {
+    //   console.log("dropped dispatched eventchanged on id", e.detail);
+    // });
+
     this.#renderEvents();
   }
 
@@ -79,21 +84,27 @@ class Timeline extends HTMLElement {
       dropTarget.dataset.column = column+'';
 
       dropTarget.addEventListener('dragenter', (e) => {
-        e.preventDefault();
-
         if (this.dragChildEvent != null) {
           this.#updateEventBoundaries(parseInt(e.target.dataset.column));
         }
       });
+
+
+
+      /* ------------------------------------- *\
+      |
+      | Drop zone setup
+      |
+      \* ------------------------------------- */
       dropTarget.addEventListener('dragover', (e) => {
-
-
         e.preventDefault();
       });
       dropTarget.addEventListener('drop', (e) => {
-        console.log("Dropped", e, this.dragChildEvent);
-
+          e.preventDefault();
       });
+      /*
+      | -------------------------------------------- */
+
 
       tmpFragment.appendChild(dropTarget);
     }
@@ -153,15 +164,32 @@ class Timeline extends HTMLElement {
       event.style.setProperty('grid-row', '4 / 5');
       event.style.setProperty('z-index', 101);
 
+      /* ------------------------------------- *\
+      |
+      | Event dispatch setup
+      |
+      \* ------------------------------------- */
       event.addEventListener('moveStart', (e) => {
-        console.log('move started');
-
         that.dragChildEvent = e;
       });
       event.addEventListener('moveEnd', (e) => {
-        that.dragChildEvent = null;
+        this.dispatchEvent(new CustomEvent('EventChanged', {detail: {
+            eventId: this.dragChildEvent.target.getAttribute('event-id'),
+            start: this.dragChildEvent.target.getAttribute('start'),
+            end: this.dragChildEvent.target.getAttribute('end'),
+            thirdOfTotal: 1,
+          }}));
       });
+      /*
+      | -------------------------------------------- */
 
+
+
+      /* ------------------------------------- *\
+      |
+      | Coordinate updating section
+      |
+      \* ------------------------------------- */
       event.addEventListener('startchanged', (e) => {
         const newStartCol = e.detail.start - that.startingYear + 1;
         e.target.style.setProperty('grid-column-start', newStartCol);
@@ -174,11 +202,12 @@ class Timeline extends HTMLElement {
       });
 
       event.addEventListener('moveEnter', (e) => {
-
         const targetColumn = e.detail.targetIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
         this.dragChildEvent = e;
         this.#updateEventBoundaries(targetColumn)
       });
+      /*
+      | -------------------------------------------- */
     }
   }
 

@@ -27,6 +27,10 @@ export default class Event extends HTMLElement {
 
   #moveIndex = -1;
 
+  #originalStart;
+  #originalEnd;
+
+
   constructor() {
     super();
 
@@ -53,10 +57,12 @@ export default class Event extends HTMLElement {
       dragNode.className = 'dragHandler';
       dragNode.draggable = true;
 
-      const that = this;
       const handleIndex = i;
       dragNode.addEventListener('dragstart', (e) => {
-        that.dispatchEvent(new CustomEvent('moveStart', {detail: {
+        e.dataTransfer.effectAllowed = 'move';
+        this.#originalStart = this.start;
+        this.#originalEnd = this.end;
+        this.dispatchEvent(new CustomEvent('moveStart', {detail: {
             handleIndex: handleIndex,
         }}));
 
@@ -64,7 +70,9 @@ export default class Event extends HTMLElement {
       });
 
       dragNode.addEventListener('dragend', (e) => {
-        that.dispatchEvent(new CustomEvent('moveEnd'));
+        if (this.#originalStart !== this.start && this.#originalEnd !== this.end) {
+          this.dispatchEvent(new CustomEvent('moveEnd'));
+        }
 
         this.#moveIndex = -1;
       });
@@ -72,11 +80,14 @@ export default class Event extends HTMLElement {
       dragNode.addEventListener('dragenter', (e) => {
         e.preventDefault();
 
-        that.dispatchEvent(new CustomEvent('moveEnter', {detail: {
+        this.dispatchEvent(new CustomEvent('moveEnter', {detail: {
           targetIndex: handleIndex,
           handleIndex: this.#moveIndex,
         }}));
       });
+
+
+
       /* ------------------------------------- *\
       |
       | Drop zone setup
@@ -85,13 +96,12 @@ export default class Event extends HTMLElement {
       |   Completion is DROP
       |
       \* ------------------------------------- */
-
       dragNode.addEventListener('dragover', (e) => {
         e.preventDefault();
       });
 
       dragNode.addEventListener('drop', (e) => {
-        that.dispatchEvent(new CustomEvent('moveEnd'));
+        e.preventDefault();
       });
 
       goalNode.appendChild(dragNode);
