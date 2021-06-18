@@ -25,6 +25,8 @@ export default class Event extends HTMLElement {
     return ['start', 'end'];
   }
 
+  #moveIndex = -1;
+
   constructor() {
     super();
 
@@ -57,9 +59,38 @@ export default class Event extends HTMLElement {
         that.dispatchEvent(new CustomEvent('moveStart', {detail: {
             handleIndex: handleIndex,
         }}));
+
+        this.#moveIndex = handleIndex;
       });
 
       dragNode.addEventListener('dragend', (e) => {
+        that.dispatchEvent(new CustomEvent('moveEnd'));
+
+        this.#moveIndex = -1;
+      });
+
+      dragNode.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+
+        that.dispatchEvent(new CustomEvent('moveEnter', {detail: {
+          targetIndex: handleIndex,
+          handleIndex: this.#moveIndex,
+        }}));
+      });
+      /* ------------------------------------- *\
+      |
+      | Drop zone setup
+      |   dragOVER is not over as in finished,
+      |     but over as in on top of.
+      |   Completion is DROP
+      |
+      \* ------------------------------------- */
+
+      dragNode.addEventListener('dragover', (e) => {
+        e.preventDefault();
+      });
+
+      dragNode.addEventListener('drop', (e) => {
         that.dispatchEvent(new CustomEvent('moveEnd'));
       });
 

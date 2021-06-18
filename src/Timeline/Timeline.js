@@ -163,25 +163,27 @@ class Timeline extends HTMLElement {
       });
 
       event.addEventListener('startchanged', (e) => {
-        console.log('start changed', e);
-
         const newStartCol = e.detail.start - that.startingYear + 1;
         e.target.style.setProperty('grid-column-start', newStartCol);
       });
 
       event.addEventListener('endchanged', (e) => {
-        console.log('start changed', e);
-
         // offset extra + 1 for CSS grid column end
         const newStartCol = e.detail.end - that.startingYear + 2;
         e.target.style.setProperty('grid-column-end', newStartCol);
+      });
+
+      event.addEventListener('moveEnter', (e) => {
+
+        const targetColumn = e.detail.targetIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
+        this.dragChildEvent = e;
+        this.#updateEventBoundaries(targetColumn)
       });
     }
   }
 
   #updateEventBoundaries(targetColumn) {
     const e = this.dragChildEvent;
-    const originalDuration = e.target.duration;
     const originalColumn = e.detail.handleIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
 
     const diff = targetColumn - originalColumn;
