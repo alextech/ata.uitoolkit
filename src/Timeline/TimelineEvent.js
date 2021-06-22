@@ -30,6 +30,8 @@ export default class Event extends HTMLElement {
   #originalStart;
   #originalEnd;
 
+  #actionType;
+
 
   constructor() {
     super();
@@ -49,30 +51,39 @@ export default class Event extends HTMLElement {
     icon.style.setProperty('grid-column', `${iconColumn} / ${iconColumn + 1}`);
 
     const goalNode = this.shadowRoot.querySelector('.goal');
-    const numCols = parseInt(this.getAttribute('end')) - parseInt(this.getAttribute('start')) + 1;
+    const end = parseInt(this.getAttribute('end'));
+    const start = parseInt(this.getAttribute('start'))
 
     // keep 1-based to be consistent with CSS grid columns
-    for (let i = 1; i <= numCols; i++) {
+    for (let year = start, i = 1; year <= end; year++, i++) {
       const dragNode = document.createElement('div');
       dragNode.className = 'dragHandler';
       dragNode.draggable = true;
+      dragNode.dataset.handleIndex = i+'';
+      dragNode.dataset.year = year+'';
 
-      const handleIndex = i;
+      /* ------------------------------------- *\
+      |
+      | Moving Dragging setup
+      |
+      \* ------------------------------------- */
       dragNode.addEventListener('dragstart', (e) => {
+        this.#actionType = 'moving';
+
         e.dataTransfer.effectAllowed = 'move';
         this.#originalStart = this.start;
         this.#originalEnd = this.end;
         this.dispatchEvent(new CustomEvent('moveStart', {detail: {
-            handleIndex: handleIndex,
+          fromStart: this.#originalStart,
+          fromEnd: this.#originalEnd,
+          handleIndex: parseInt(e.target.dataset.handleIndex),
         }}));
 
-        this.#moveIndex = handleIndex;
+        this.#moveIndex = parseInt(e.target.dataset.handleIndex);
       });
 
       dragNode.addEventListener('dragend', (e) => {
-        if (this.#originalStart !== this.start && this.#originalEnd !== this.end) {
-          this.dispatchEvent(new CustomEvent('moveEnd'));
-        }
+        this.dispatchEvent(new CustomEvent('moveEnd'));
 
         this.#moveIndex = -1;
       });
@@ -80,10 +91,18 @@ export default class Event extends HTMLElement {
       dragNode.addEventListener('dragenter', (e) => {
         e.preventDefault();
 
-        this.dispatchEvent(new CustomEvent('moveEnter', {detail: {
-          targetIndex: handleIndex,
-          handleIndex: this.#moveIndex,
-        }}));
+        switch (this.#actionType) {
+          case 'moving':
+            this.dispatchEvent(new CustomEvent('moveEnter', {detail: {
+                targetIndex: parseInt(e.target.dataset.handleIndex),
+                handleIndex: this.#moveIndex,
+              }}));
+
+            break;
+          case 'resizing':
+
+            break;
+        }
       });
 
 
@@ -107,9 +126,27 @@ export default class Event extends HTMLElement {
       goalNode.appendChild(dragNode);
     }
 
-    // this.shadowRoot.querySelectorAll('.goalRight')[0].addEventListener('dragstart',  (e) => {
-    //   e.preventDefault();
-    // });
+    /* ------------------------------------- *\
+    |
+    | Resizing dragging setup
+    |
+    \* ------------------------------------- */
+    this.shadowRoot.querySelectorAll('.goalRight')[0].addEventListener('dragstart',  (e) => {
+
+      this.#actionType = 'resizing';
+
+      this.dispatchEvent(new CustomEvent('resizeStart', {detail: {
+        eventId: this.getAttribute('event-id'),
+        direction: 'right'
+      }}))
+    });
+    this.shadowRoot.querySelectorAll('.goalRight')[0].addEventListener('dragend',  (e) => {
+      e.preventDefault();
+
+      this.dispatchEvent(new CustomEvent('resizeEnd', {
+        eventId: this.getAttribute('event-id'),
+      }))
+    });
   }
 
   attributeChangedCallback(attribute, oldValue, newValue) {
@@ -123,6 +160,15 @@ export default class Event extends HTMLElement {
         break;
       case 'end':
         // TODO if not moving everything
+        if(this.#actionType === 'resizing') {
+          const goalHandlersContainer = this.shadowRoot.querySelector('.goal');
+          let numGoalHandles = goalHandlersContainer.childElementCount;
+          const diffGoalHandles = parseInt(oldValue) - parseInt(newValue) + 1;
+          while (diffGoalHandles > 1 && numGoalHandles > diffGoalHandles) {
+            goalHandlersContainer.removeChild(goalHandlersContainer.lastElementChild);
+            numGoalHandles--;
+          }
+        }
         this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}}));
 
         break;
