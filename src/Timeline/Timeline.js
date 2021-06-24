@@ -93,14 +93,19 @@ class Timeline extends HTMLElement {
         }
 
         if (this.#resizeChildEvent != null) {
-          console.log(this.#resizeChildEvent, e.target.dataset.year);
           switch (this.#resizeChildEvent.detail.direction) {
             case 'right':
-              this.#resizeChildEvent.target.setAttribute('end', e.target.dataset.year);
+              if(e.target.dataset.year >= this.#resizeChildEvent.target.start)
+              {
+                this.#resizeChildEvent.target.setAttribute('end', e.target.dataset.year);
+              }
 
               break;
             case 'left':
-
+              if(e.target.dataset.year <= this.#resizeChildEvent.target.end)
+              {
+                this.#resizeChildEvent.target.setAttribute('start', e.target.dataset.year);
+              }
 
               break;
           }
