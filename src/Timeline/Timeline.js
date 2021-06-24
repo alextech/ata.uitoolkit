@@ -19,12 +19,14 @@ class Timeline extends HTMLElement {
   #maxYear;
   #dragChildEvent = null;
   #resizeChildEvent = null;
+  #dragNewEventStart = null;
 
   constructor() {
     super();
 
     this.attachShadow({mode: 'open'});
     this.shadowRoot.adoptedStyleSheets = [style];
+    this.draggable = false;
   }
 
   connectedCallback() {
@@ -35,6 +37,10 @@ class Timeline extends HTMLElement {
     // this.addEventListener('EventChanged', (e) => {
     //   console.log("dropped dispatched eventchanged on id", e.detail);
     // });
+
+    this.addEventListener('NewEventRequest', (e) => {
+      console.log("new event requested", e);
+    });
 
     this.#renderEvents();
   }
@@ -81,11 +87,19 @@ class Timeline extends HTMLElement {
       // <div class="dropTarget" style="grid-row: 1/5;" draggable="true" />
       const dropTarget = document.createElement('div');
       dropTarget.className = 'dropTarget';
+      dropTarget.className = 'dropTarget';
       dropTarget.style.setProperty('grid-column', `${column}`);
       dropTarget.style.setProperty('grid-row', '1 / 5');
       dropTarget.draggable = true;
       dropTarget.dataset.column = column+'';
       dropTarget.dataset.year = (currentYear++)+'';
+
+      dropTarget.addEventListener('dragstart', (e) => {
+        this.#dragNewEventStart = e.target.dataset.year;
+      });
+      dropTarget.addEventListener('dragend', () => {
+        this.#dragNewEventStart = null;
+      });
 
       dropTarget.addEventListener('dragenter', (e) => {
         if (this.#dragChildEvent != null) {
@@ -109,6 +123,13 @@ class Timeline extends HTMLElement {
 
               break;
           }
+        }
+
+        if (this.#dragNewEventStart != null) {
+          this.dispatchEvent(new CustomEvent('NewEventRequest', {detail: {
+              start: parseInt(this.#dragNewEventStart),
+              end: parseInt(e.target.dataset.year),
+          }}));
         }
       });
 
