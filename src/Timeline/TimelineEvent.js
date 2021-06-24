@@ -27,6 +27,7 @@ export default class Event extends HTMLElement {
   #originalEnd;
 
   #actionType;
+  #actionDirection;
   #goalNode;
 
 
@@ -63,15 +64,16 @@ export default class Event extends HTMLElement {
     |
     \* ------------------------------------- */
     const goalRight = this.shadowRoot.querySelector('#goalRight');
-    goalRight.addEventListener('dragstart',  (e) => {
+    goalRight.addEventListener('dragstart',  () => {
       this.#actionType = 'resizing';
+      this.#actionDirection = 'right';
 
       this.dispatchEvent(new CustomEvent('resizeStart', {detail: {
         eventId: this.getAttribute('event-id'),
         direction: 'right'
       }}))
     });
-    goalRight.addEventListener('dragend',  (e) => {
+    goalRight.addEventListener('dragend',  () => {
       this.#actionType = '';
 
       this.dispatchEvent(new CustomEvent('resizeEnd', {
@@ -86,15 +88,16 @@ export default class Event extends HTMLElement {
     |
     \* ------------------------------------- */
     const goalLeft = this.shadowRoot.querySelector('#goalLeft');
-    goalLeft.addEventListener('dragstart',  (e) => {
+    goalLeft.addEventListener('dragstart',  () => {
       this.#actionType = 'resizing';
+      this.#actionDirection = 'left';
 
       this.dispatchEvent(new CustomEvent('resizeStart', {detail: {
         eventId: this.getAttribute('event-id'),
         direction: 'left'
       }}))
     });
-    goalLeft.addEventListener('dragend',  (e) => {
+    goalLeft.addEventListener('dragend',  () => {
       this.#actionType = '';
 
       this.dispatchEvent(new CustomEvent('resizeEnd', {
@@ -186,7 +189,7 @@ export default class Event extends HTMLElement {
       this.#moveIndex = parseInt(e.target.dataset.handleIndex);
     });
 
-    dragNode.addEventListener('dragend', (e) => {
+    dragNode.addEventListener('dragend', () => {
       this.dispatchEvent(new CustomEvent('moveEnd'));
 
       this.#actionType = '';
@@ -206,6 +209,9 @@ export default class Event extends HTMLElement {
 
           break;
         case 'resizing':
+          const attribute = this.#actionDirection === 'right' ? 'end' : 'start';
+          const year = this.start + parseInt(e.target.dataset.handleIndex) - 1;
+          this.setAttribute(attribute, year+'');
 
           break;
       }
