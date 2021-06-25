@@ -6,21 +6,17 @@ import style from './TimelineEvent.scss';
 const eventTpl = document.createElement('template');
 eventTpl.innerHTML = `
 <div class="existingGoal" style="height: 2em; background-color: cornflowerblue">
-  <div class="goalLeft">&nbsp;</div>
+  <div id="goalLeft" draggable="true">&nbsp;</div>
   
-  <div class="goal"></div>
+  <div id="goal"></div>
   
-  <div class="goalRight"
-     draggable="true"
- 
-  
-     >&nbsp;</div>
+  <div id="goalRight" draggable="true">&nbsp;</div>
 </div>
 <div class="goalIcon lengthClass">
     <img draggable="false" src="" alt="" />
 </div>`;
 
-export default class TimelineEvent extends HTMLElement {
+export default class Event extends HTMLElement {
   static get observedAttributes() {
     return ['start', 'end'];
   }
@@ -30,6 +26,10 @@ export default class TimelineEvent extends HTMLElement {
   #originalStart;
   #originalEnd;
 
+  #actionType;
+  #actionDirection;
+  #goalNode;
+
 
   constructor() {
     super();
@@ -37,6 +37,8 @@ export default class TimelineEvent extends HTMLElement {
     this.attachShadow({mode: 'open'});
     this.shadowRoot.appendChild(eventTpl.content.cloneNode(true));
     this.shadowRoot.adoptedStyleSheets = [style];
+
+    this.#goalNode = this.shadowRoot.querySelector('#goal');
   }
 
   connectedCallback() {
@@ -48,68 +50,62 @@ export default class TimelineEvent extends HTMLElement {
     icon.src = this.getAttribute('icon');
     icon.style.setProperty('grid-column', `${iconColumn} / ${iconColumn + 1}`);
 
-    const goalNode = this.shadowRoot.querySelector('.goal');
-    const numCols = parseInt(this.getAttribute('end')) - parseInt(this.getAttribute('start')) + 1;
+    const end = parseInt(this.getAttribute('end'));
+    const start = parseInt(this.getAttribute('start'))
 
     // keep 1-based to be consistent with CSS grid columns
-    for (let i = 1; i <= numCols; i++) {
-      const dragNode = document.createElement('div');
-      dragNode.className = 'dragHandler';
-      dragNode.draggable = true;
-
-      const handleIndex = i;
-      dragNode.addEventListener('dragstart', (e) => {
-        e.dataTransfer.effectAllowed = 'move';
-        this.#originalStart = this.start;
-        this.#originalEnd = this.end;
-        this.dispatchEvent(new CustomEvent('moveStart', {detail: {
-            handleIndex: handleIndex,
-        }}));
-
-        this.#moveIndex = handleIndex;
-      });
-
-      dragNode.addEventListener('dragend', () => {
-        if (this.#originalStart !== this.start && this.#originalEnd !== this.end) {
-          this.dispatchEvent(new CustomEvent('moveEnd'));
-        }
-
-        this.#moveIndex = -1;
-      });
-
-      dragNode.addEventListener('dragenter', (e) => {
-        e.preventDefault();
-
-        this.dispatchEvent(new CustomEvent('moveEnter', {detail: {
-          targetIndex: handleIndex,
-          handleIndex: this.#moveIndex,
-        }}));
-      });
-
-
-
-      /* ------------------------------------- *\
-      |
-      | Drop zone setup
-      |   dragOVER is not over as in finished,
-      |     but over as in on top of.
-      |   Completion is DROP
-      |
-      \* ------------------------------------- */
-      dragNode.addEventListener('dragover', (e) => {
-        e.preventDefault();
-      });
-
-      dragNode.addEventListener('drop', (e) => {
-        e.preventDefault();
-      });
-
-      goalNode.appendChild(dragNode);
+    for (let year = start, i = 1; year <= end; year++, i++) {
+      this.#addDragNodeAtIndex(i)
     }
 
-    // this.shadowRoot.querySelectorAll('.goalRight')[0].addEventListener('dragstart',  (e) => {
-    //   e.preventDefault();
-    // });
+    /* ------------------------------------- *\
+    |
+    | Right Resizing dragging setup
+    |
+    \* ------------------------------------- */
+    const goalRight = this.shadowRoot.querySelector('#goalRight');
+    goalRight.addEventListener('dragstart',  () => {
+      this.#actionType = 'resizing';
+      this.#actionDirection = 'right';
+
+      this.dispatchEvent(new CustomEvent('resizeStart', {detail: {
+        eventId: this.getAttribute('event-id'),
+        direction: 'right'
+      }}))
+    });
+    goalRight.addEventListener('dragend',  () => {
+      this.#actionType = '';
+
+      this.dispatchEvent(new CustomEvent('resizeEnd', {
+        eventId: this.getAttribute('event-id'),
+      }))
+    });
+
+
+    /* ------------------------------------- *\
+    |
+    | Left Resizing dragging setup
+    |
+    \* ------------------------------------- */
+    const goalLeft = this.shadowRoot.querySelector('#goalLeft');
+    goalLeft.addEventListener('dragstart',  () => {
+      this.#actionType = 'resizing';
+      this.#actionDirection = 'left';
+
+      this.dispatchEvent(new CustomEvent('resizeStart', {detail: {
+        eventId: this.getAttribute('event-id'),
+        direction: 'left'
+      }}))
+    });
+    goalLeft.addEventListener('dragend',  () => {
+      this.#actionType = '';
+
+      this.dispatchEvent(new CustomEvent('resizeEnd', {
+        eventId: this.getAttribute('event-id'),
+      }))
+    });
+
+
   }
 
   attributeChangedCallback(attribute, oldValue, newValue) {
@@ -117,16 +113,129 @@ export default class TimelineEvent extends HTMLElement {
 
     switch (attribute) {
       case 'start':
-        // TODO if not moving everything
+        if(this.#actionType === 'resizing' || this.#actionType === '') {
+          const goalHandlersContainer = this.shadowRoot.querySelector('#goal');
+          let diffGoalHandles = parseInt(newValue) - parseInt(oldValue);
+
+          if(diffGoalHandles > 0) {
+            while (diffGoalHandles > 0) {
+              if(goalHandlersContainer.lastElementChild != null)
+              {
+                goalHandlersContainer.removeChild(goalHandlersContainer.lastElementChild);
+              }
+              diffGoalHandles--;
+            }
+          } else {
+            while(diffGoalHandles < 0) {
+              this.#addDragNodeAtIndex(goalHandlersContainer.childElementCount + 1);
+              diffGoalHandles++;
+            }
+          }
+        }
+
         this.dispatchEvent(new CustomEvent("startchanged", {detail: {start: newValue}}));
 
         break;
       case 'end':
-        // TODO if not moving everything
+        if(this.#actionType === 'resizing' || this.#actionType === '') {
+          const goalHandlersContainer = this.shadowRoot.querySelector('#goal');
+          let diffGoalHandles = parseInt(newValue) - parseInt(oldValue);
+
+          if(diffGoalHandles < 0) {
+            while (diffGoalHandles < 0) {
+              if(goalHandlersContainer.lastElementChild != null)
+              {
+                goalHandlersContainer.removeChild(goalHandlersContainer.lastElementChild);
+              }
+              diffGoalHandles++;
+            }
+          } else {
+            while(diffGoalHandles > 0) {
+              this.#addDragNodeAtIndex(goalHandlersContainer.childElementCount + 1);
+              diffGoalHandles--;
+            }
+          }
+        }
+
         this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}}));
 
         break;
     }
+  }
+
+  #addDragNodeAtIndex(index) {
+    const dragNode = document.createElement('div');
+    dragNode.className = 'dragHandler';
+    dragNode.draggable = true;
+    dragNode.dataset.handleIndex = index+'';
+
+    /* ------------------------------------- *\
+    |
+    | Moving Dragging setup
+    |
+    \* ------------------------------------- */
+    dragNode.addEventListener('dragstart', (e) => {
+      this.#actionType = 'moving';
+
+      e.dataTransfer.effectAllowed = 'move';
+      this.#originalStart = this.start;
+      this.#originalEnd = this.end;
+      this.dispatchEvent(new CustomEvent('moveStart', {detail: {
+          fromStart: this.#originalStart,
+          fromEnd: this.#originalEnd,
+          handleIndex: parseInt(e.target.dataset.handleIndex),
+        }}));
+
+      this.#moveIndex = parseInt(e.target.dataset.handleIndex);
+    });
+
+    dragNode.addEventListener('dragend', () => {
+      this.dispatchEvent(new CustomEvent('moveEnd'));
+
+      this.#actionType = '';
+
+      this.#moveIndex = -1;
+    });
+
+    dragNode.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+
+      switch (this.#actionType) {
+        case 'moving':
+          this.dispatchEvent(new CustomEvent('moveEnter', {detail: {
+              targetIndex: parseInt(e.target.dataset.handleIndex),
+              handleIndex: this.#moveIndex,
+            }}));
+
+          break;
+        case 'resizing':
+          const attribute = this.#actionDirection === 'right' ? 'end' : 'start';
+          const year = this.start + parseInt(e.target.dataset.handleIndex) - 1;
+          this.setAttribute(attribute, year+'');
+
+          break;
+      }
+    });
+
+
+
+    /* ------------------------------------- *\
+    |
+    | Drop zone setup
+    |   dragOVER is not over as in finished,
+    |     but over as in on top of.
+    |   Completion is DROP
+    |
+    \* ------------------------------------- */
+    dragNode.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+
+    dragNode.addEventListener('drop', (e) => {
+      e.preventDefault();
+    });
+
+    this.#goalNode.appendChild(dragNode);
   }
 
   set start(start) {
@@ -149,4 +258,8 @@ export default class TimelineEvent extends HTMLElement {
     return this.end - this.start + 1;
   }
 
+}
+
+if(!customElements.get('ata-timeline-event')) {
+  customElements.define('ata-timeline-event', Event);
 }

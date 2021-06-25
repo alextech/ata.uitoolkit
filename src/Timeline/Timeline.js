@@ -10,20 +10,23 @@ timelineTpl.innerHTML =
 <div class="year" style="grid-row: 6/7;"></div>
 `;
 
-export default class Timeline extends HTMLElement {
+class Timeline extends HTMLElement {
   static get observedAttributes() {
     return ['years', 'startingyear', 'age'];
   }
 
   #previousYears;
   #maxYear;
-  dragChildEvent = null;
+  #dragChildEvent = null;
+  #resizeChildEvent = null;
+  #dragNewEventStart = null;
 
   constructor() {
     super();
 
     this.attachShadow({mode: 'open'});
     this.shadowRoot.adoptedStyleSheets = [style];
+    this.draggable = false;
   }
 
   connectedCallback() {
@@ -34,6 +37,10 @@ export default class Timeline extends HTMLElement {
     // this.addEventListener('EventChanged', (e) => {
     //   console.log("dropped dispatched eventchanged on id", e.detail);
     // });
+
+    this.addEventListener('NewEventRequest', (e) => {
+      console.log("new event requested", e);
+    });
 
     this.#renderEvents();
   }
@@ -73,19 +80,56 @@ export default class Timeline extends HTMLElement {
     for (const period of periods) {
       period.style.setProperty('grid-column', `${i} / ${++i}`);
     }
+
+    let currentYear = this.startingYear;
     for (let i = 1; i <= years; i++) {
       const column = i;
       // <div class="dropTarget" style="grid-row: 1/5;" draggable="true" />
       const dropTarget = document.createElement('div');
       dropTarget.className = 'dropTarget';
+      dropTarget.className = 'dropTarget';
       dropTarget.style.setProperty('grid-column', `${column}`);
       dropTarget.style.setProperty('grid-row', '1 / 5');
       dropTarget.draggable = true;
       dropTarget.dataset.column = column+'';
+      dropTarget.dataset.year = (currentYear++)+'';
+
+      dropTarget.addEventListener('dragstart', (e) => {
+        this.#dragNewEventStart = e.target.dataset.year;
+      });
+      dropTarget.addEventListener('dragend', () => {
+        this.#dragNewEventStart = null;
+      });
 
       dropTarget.addEventListener('dragenter', (e) => {
-        if (this.dragChildEvent != null) {
+        if (this.#dragChildEvent != null) {
           this.#updateEventBoundaries(parseInt(e.target.dataset.column));
+        }
+
+        if (this.#resizeChildEvent != null) {
+          switch (this.#resizeChildEvent.detail.direction) {
+            case 'right':
+              if(e.target.dataset.year >= this.#resizeChildEvent.target.start)
+              {
+                this.#resizeChildEvent.target.setAttribute('end', e.target.dataset.year);
+              }
+
+              break;
+            case 'left':
+              if(e.target.dataset.year <= this.#resizeChildEvent.target.end)
+              {
+                this.#resizeChildEvent.target.setAttribute('start', e.target.dataset.year);
+              }
+
+              break;
+          }
+        }
+
+        if (this.#dragNewEventStart != null) {
+          this.dispatchEvent(new CustomEvent('NewEventRequest', {detail: {
+              start: parseInt(this.#dragNewEventStart),
+              end: parseInt(e.target.dataset.year),
+          }}));
         }
       });
 
@@ -101,6 +145,7 @@ export default class Timeline extends HTMLElement {
       });
       dropTarget.addEventListener('drop', (e) => {
           e.preventDefault();
+          // this.#dragChildEvent = null;
       });
       /*
       | -------------------------------------------- */
@@ -170,16 +215,37 @@ export default class Timeline extends HTMLElement {
       |
       \* ------------------------------------- */
       event.addEventListener('moveStart', (e) => {
-        that.dragChildEvent = e;
+        this.#dragChildEvent = e;
       });
-      event.addEventListener('moveEnd', () => {
-        this.dispatchEvent(new CustomEvent('EventChanged', {detail: {
-            eventId: this.dragChildEvent.target.getAttribute('event-id'),
-            start: this.dragChildEvent.target.getAttribute('start'),
-            end: this.dragChildEvent.target.getAttribute('end'),
-            thirdOfTotal: 1,
-          }}));
+      event.addEventListener('moveEnd', (e) => {
+        const from = {
+          start: this.#dragChildEvent.fromStart,
+          end: this.#dragChildEvent.fromEnd
+        };
+
+        const to = {
+          start: parseInt(this.#dragChildEvent.target.getAttribute('start')),
+          end: parseInt(this.#dragChildEvent.target.getAttribute('end'))
+        }
+
+        if (from.start !== to.start || from.end !== to.end) {
+          this.dispatchEvent(new CustomEvent('EventChanged', {detail: {
+              eventId: this.#dragChildEvent.target.getAttribute('event-id'),
+              from: from,
+              to: to,
+              thirdOfTotal: 1,
+            }}));
+        }
+
+
+        this.#dragChildEvent = null;
       });
+      event.addEventListener('resizeStart', (e) => {
+        this.#resizeChildEvent = e;
+      });
+      event.addEventListener('resizeEnd', (e) => {
+        this.#resizeChildEvent = null;
+      })
       /*
       | -------------------------------------------- */
 
@@ -191,19 +257,18 @@ export default class Timeline extends HTMLElement {
       |
       \* ------------------------------------- */
       event.addEventListener('startchanged', (e) => {
-        const newStartCol = e.detail.start - that.startingYear + 1;
+        const newStartCol = e.detail.start - this.startingYear + 1;
         e.target.style.setProperty('grid-column-start', newStartCol);
       });
 
       event.addEventListener('endchanged', (e) => {
         // offset extra + 1 for CSS grid column end
-        const newStartCol = e.detail.end - that.startingYear + 2;
+        const newStartCol = e.detail.end - this.startingYear + 2;
         e.target.style.setProperty('grid-column-end', newStartCol);
       });
 
       event.addEventListener('moveEnter', (e) => {
         const targetColumn = e.detail.targetIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
-        this.dragChildEvent = e;
         this.#updateEventBoundaries(targetColumn)
       });
       /*
@@ -212,7 +277,7 @@ export default class Timeline extends HTMLElement {
   }
 
   #updateEventBoundaries(targetColumn) {
-    const e = this.dragChildEvent;
+    const e = this.#dragChildEvent;
     const originalColumn = e.detail.handleIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
 
     const diff = targetColumn - originalColumn;
@@ -255,4 +320,8 @@ export default class Timeline extends HTMLElement {
   get startingYear() {
     return parseInt(this.getAttribute('startingYear'));
   }
+}
+
+if(!customElements.get('ata-timeline')) {
+  customElements.define('ata-timeline', Timeline);
 }
