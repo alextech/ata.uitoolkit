@@ -1,4 +1,4 @@
-import '../src/Timeline';
+import '../src/index';
 import event_1_Icon from './assets/dollar.png';
 
 export default {

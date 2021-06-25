@@ -1,13 +1,14 @@
 {
   "name": "ata.uitoolkit",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Extract useful components from projects",
   "repository": "https://github.com/alextech/constructable-style-loader",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "build": "npx webpack --config ./webpack.config.js"
   },
   "author": "Alexander Romanenko",
   "license": "ISC",
@@ -25,7 +26,7 @@
     "postcss-loader": "^6.1.0",
     "sass": "^1.35.0",
     "sass-loader": "^12.1.0",
-    "webpack": "^5.39.0"
-  },
-  "dependencies": {}
+    "webpack": "^5.40.0",
+    "webpack-cli": "^4.7.2"
+  }
 }

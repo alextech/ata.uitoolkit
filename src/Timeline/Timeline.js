@@ -10,7 +10,7 @@ timelineTpl.innerHTML =
 <div class="year" style="grid-row: 6/7;"></div>
 `;
 
-class Timeline extends HTMLElement {
+export default class Timeline extends HTMLElement {
   static get observedAttributes() {
     return ['years', 'startingyear', 'age'];
   }
@@ -172,7 +172,7 @@ class Timeline extends HTMLElement {
       event.addEventListener('moveStart', (e) => {
         that.dragChildEvent = e;
       });
-      event.addEventListener('moveEnd', (e) => {
+      event.addEventListener('moveEnd', () => {
         this.dispatchEvent(new CustomEvent('EventChanged', {detail: {
             eventId: this.dragChildEvent.target.getAttribute('event-id'),
             start: this.dragChildEvent.target.getAttribute('start'),
@@ -255,8 +255,4 @@ class Timeline extends HTMLElement {
   get startingYear() {
     return parseInt(this.getAttribute('startingYear'));
   }
-}
-
-if(!customElements.get('ata-timeline')) {
-  customElements.define('ata-timeline', Timeline);
 }

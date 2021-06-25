@@ -20,7 +20,7 @@ eventTpl.innerHTML = `
     <img draggable="false" src="" alt="" />
 </div>`;
 
-export default class Event extends HTMLElement {
+export default class TimelineEvent extends HTMLElement {
   static get observedAttributes() {
     return ['start', 'end'];
   }
@@ -69,7 +69,7 @@ export default class Event extends HTMLElement {
         this.#moveIndex = handleIndex;
       });
 
-      dragNode.addEventListener('dragend', (e) => {
+      dragNode.addEventListener('dragend', () => {
         if (this.#originalStart !== this.start && this.#originalEnd !== this.end) {
           this.dispatchEvent(new CustomEvent('moveEnd'));
         }
@@ -149,8 +149,4 @@ export default class Event extends HTMLElement {
     return this.end - this.start + 1;
   }
 
-}
-
-if(!customElements.get('ata-timeline-event')) {
-  customElements.define('ata-timeline-event', Event);
 }
