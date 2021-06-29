@@ -1,6 +1,6 @@
 {
   "name": "ata.uitoolkit",
-  "version": "0.9.1",
+  "version": "0.9.3",
   "description": "Extract useful components from projects",
   "repository": "https://github.com/alextech/constructable-style-loader",
   "main": "dist/index.js",
