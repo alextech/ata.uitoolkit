@@ -1,6 +1,7 @@
 const path = require( 'path' );
 
-const mode = 'production';
+// const mode = 'production';
+const mode = 'development';
 
 process.env.NODE_ENV = mode;
 process.env.BABEL_ENV = mode;

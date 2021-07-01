@@ -10,7 +10,7 @@ timelineTpl.innerHTML =
 <div class="year" style="grid-row: 6/7;"></div>
 `;
 
-class Timeline extends HTMLElement {
+export default class Timeline extends HTMLElement {
   static get observedAttributes() {
     return ['years', 'startingyear', 'age'];
   }
@@ -27,21 +27,23 @@ class Timeline extends HTMLElement {
 
     this.attachShadow({mode: 'open'});
     this.shadowRoot.adoptedStyleSheets = [style];
-    this.draggable = false;
   }
 
   connectedCallback() {
-    this.observer = new MutationObserver(this.#renderEvents.bind(this));
-    this.observer.observe(this, {childList: true});
+    this.draggable = false;
+    const contentObserver = new MutationObserver((mutationsList) => {
+      for (const mutationRecord of mutationsList) {
+        if (mutationRecord.addedNodes.length > 0) {
+          this.#renderEvents();
+        }
+      }
+    });
+    contentObserver.observe(this, {childList: true});
 
     // TODO tmp test
     // this.addEventListener('EventChanged', (e) => {
     //   console.log("dropped dispatched eventchanged on id", e.detail);
     // });
-
-    this.addEventListener('NewEventRequest', (e) => {
-      console.log("new event requested", e);
-    });
 
     this.#renderEvents();
   }
@@ -52,6 +54,7 @@ class Timeline extends HTMLElement {
     switch (attribute) {
       case 'years':
         this.#setupGrid(parseInt(newValue));
+        this.#renderEvents();
 
         break;
 
@@ -62,6 +65,7 @@ class Timeline extends HTMLElement {
 
       case 'startingyear':
         Timeline.#updateStartingYear(parseInt(newValue), this.shadowRoot);
+        this.#renderEvents();
 
         break;
     }
