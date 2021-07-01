@@ -206,6 +206,7 @@ export default class Timeline extends HTMLElement {
     }
   }
 
+  #processedEvents = [];
   #renderEvents() {
     const events = this.getElementsByTagName('ata-timeline-event');
 
@@ -215,6 +216,13 @@ export default class Timeline extends HTMLElement {
       event.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
       event.style.setProperty('grid-row', '4 / 5');
       event.style.setProperty('z-index', 101);
+
+      const eventId = event.getAttribute('event-id');
+      if (this.#processedEvents.includes(eventId)) {
+        continue;
+      }
+
+      this.#processedEvents.push(eventId);
 
       /* ------------------------------------- *\
       |
