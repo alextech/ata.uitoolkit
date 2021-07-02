@@ -4,7 +4,8 @@ import event_1_Icon from './assets/dollar.png';
 export default {
   title: 'ATA/Timeline',
   argTypes: {
-    NewEventRequest: { action: 'NewEventRequest' }
+    NewEventRequest: { action: 'NewEventRequest' },
+    EventChanged: { action: 'EventChanged' }
   }
 }
 
@@ -32,6 +33,9 @@ const TimelineTemplate = (args) => {
   const timelineEl = tpl.firstElementChild;
   timelineEl.addEventListener('NewEventRequest', (e) => {
     args.NewEventRequest(e.detail);
+  });
+  timelineEl.addEventListener('EventChanged', (e) => {
+    args.EventChanged(e.detail);
   });
 
   return timelineEl;

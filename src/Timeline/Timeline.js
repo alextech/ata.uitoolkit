@@ -234,8 +234,8 @@ export default class Timeline extends HTMLElement {
       });
       event.addEventListener('moveEnd', () => {
         const from = {
-          start: this.#dragChildEvent.fromStart,
-          end: this.#dragChildEvent.fromEnd
+          start: this.#dragChildEvent.detail.fromStart,
+          end: this.#dragChildEvent.detail.fromEnd
         };
 
         const to = {
@@ -259,6 +259,27 @@ export default class Timeline extends HTMLElement {
         this.#resizeChildEvent = e;
       });
       event.addEventListener('resizeEnd', () => {
+        const from = {
+          start: this.#resizeChildEvent.detail.fromStart,
+          end: this.#resizeChildEvent.detail.fromEnd
+        };
+
+        const to = {
+          start: parseInt(this.#resizeChildEvent.target.getAttribute('start')),
+          end: parseInt(this.#resizeChildEvent.target.getAttribute('end'))
+        }
+
+        if (from.start !== to.start || from.end !== to.end) {
+          this.dispatchEvent(new CustomEvent('EventChanged', {
+            detail: {
+              eventId: this.#resizeChildEvent.target.getAttribute('event-id'),
+              from: from,
+              to: to,
+              thirdOfTotal: 1,
+            }
+          }));
+        }
+
         this.#resizeChildEvent = null;
       })
       /*

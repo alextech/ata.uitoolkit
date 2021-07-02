@@ -64,13 +64,18 @@ export default class Event extends HTMLElement {
     |
     \* ------------------------------------- */
     const goalRight = this.shadowRoot.querySelector('#goalRight');
-    goalRight.addEventListener('dragstart',  () => {
+    goalRight.addEventListener('dragstart',  (e) => {
       this.#actionType = 'resizing';
       this.#actionDirection = 'right';
 
+      this.#originalStart = this.start;
+      this.#originalEnd = this.end;
       this.dispatchEvent(new CustomEvent('resizeStart', {detail: {
         eventId: this.getAttribute('event-id'),
-        direction: 'right'
+        direction: 'right',
+        fromStart: this.#originalStart,
+        fromEnd: this.#originalEnd,
+        handleIndex: parseInt(e.target.dataset.handleIndex)
       }}))
     });
     goalRight.addEventListener('dragend',  () => {
@@ -88,13 +93,18 @@ export default class Event extends HTMLElement {
     |
     \* ------------------------------------- */
     const goalLeft = this.shadowRoot.querySelector('#goalLeft');
-    goalLeft.addEventListener('dragstart',  () => {
+    goalLeft.addEventListener('dragstart',  (e) => {
       this.#actionType = 'resizing';
       this.#actionDirection = 'left';
 
+      this.#originalStart = this.start;
+      this.#originalEnd = this.end;
       this.dispatchEvent(new CustomEvent('resizeStart', {detail: {
         eventId: this.getAttribute('event-id'),
-        direction: 'left'
+        direction: 'left',
+        fromStart: this.#originalStart,
+        fromEnd: this.#originalEnd,
+        handleIndex: parseInt(e.target.dataset.handleIndex)
       }}))
     });
     goalLeft.addEventListener('dragend',  () => {
