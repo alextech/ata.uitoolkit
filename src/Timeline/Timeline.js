@@ -214,7 +214,7 @@ export default class Timeline extends HTMLElement {
       const startColumn = parseInt(event.getAttribute('start')) - this.startingYear + 1;
       const endColumn = parseInt(event.getAttribute('end')) - this.startingYear + 2;
       event.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
-      event.style.setProperty('grid-row', '4 / 5');
+      event.style.setProperty('grid-row', '3 / 5');
       event.style.setProperty('z-index', 101);
 
       const eventId = event.getAttribute('event-id');

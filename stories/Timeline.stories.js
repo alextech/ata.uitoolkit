@@ -22,9 +22,10 @@ const TimelineTemplate = (args) => {
   for (const event of args.events ?? []) {
     innerHtml += `
         <ata-timeline-event 
-            event-id="sample_1" 
+            event-id="${event.event_id}" 
             start="${event.start}" end="${event.end}" icon="${event.icon}"
-            slot="events" />`;
+            handleIndex="${event.handleIndex}"
+            slot="events"></ata-timeline-event>`;
   }
 
   innerHtml += '</ata-timeline>';
@@ -50,7 +51,7 @@ EmptyTimeline.args = {
 
 export const TimelineWithEvent = TimelineTemplate.bind({});
 TimelineWithEvent.args = {
-  years: 15,
+  years: 35,
   age: 34,
   startingYear: 2021,
 
@@ -58,8 +59,17 @@ TimelineWithEvent.args = {
     {
       start: 2025,
       end: 2033,
+      handleIndex: 3,
+      event_id: "sample_1",
       icon: event_1_Icon
-    }
+    },
+    {
+      start: 2035,
+      end: 2041,
+      handleIndex: 3,
+      event_id: "sample_2",
+      icon: event_1_Icon
+    },
   ],
 
 };

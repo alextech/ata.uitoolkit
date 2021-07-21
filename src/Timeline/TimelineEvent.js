@@ -5,20 +5,21 @@ import style from './TimelineEvent.scss';
 
 const eventTpl = document.createElement('template');
 eventTpl.innerHTML = `
-<div class="existingGoal" style="height: 2em; background-color: cornflowerblue">
+<div id="goalIcon">
+    <img draggable="false" src="" alt="" />
+</div>
+<!--<div class="existingGoal" style="height: 2em; background-color: cornflowerblue">-->
   <div id="goalLeft" draggable="true">&nbsp;</div>
   
-  <div id="goal"></div>
+<!--  <div id="goal"></div>-->
   
   <div id="goalRight" draggable="true">&nbsp;</div>
-</div>
-<div class="goalIcon lengthClass">
-    <img draggable="false" src="" alt="" />
-</div>`;
+<!--</div>-->
+`;
 
 export default class Event extends HTMLElement {
   static get observedAttributes() {
-    return ['start', 'end'];
+    return ['start', 'end', 'handleindex'];
   }
 
   #moveIndex = -1;
@@ -28,7 +29,9 @@ export default class Event extends HTMLElement {
 
   #actionType;
   #actionDirection;
-  #goalNode;
+  #rightDragNode;
+
+  #goalIconNode;
 
 
   constructor() {
@@ -38,7 +41,8 @@ export default class Event extends HTMLElement {
     this.shadowRoot.appendChild(eventTpl.content.cloneNode(true));
     this.shadowRoot.adoptedStyleSheets = [style];
 
-    this.#goalNode = this.shadowRoot.querySelector('#goal');
+    this.#rightDragNode = this.shadowRoot.querySelector('#goalRight');
+    this.#goalIconNode = this.shadowRoot.querySelector('#goalIcon');
   }
 
   connectedCallback() {
@@ -121,8 +125,12 @@ export default class Event extends HTMLElement {
   attributeChangedCallback(attribute, oldValue, newValue) {
     if (oldValue === newValue) return;
 
+
     switch (attribute) {
       case 'start':
+        {const length = this.end - parseInt(newValue);
+        this.shadowRoot.host.style.setProperty('--length', length);}
+
         if(this.#actionType === 'resizing' || this.#actionType === '') {
           const goalHandlersContainer = this.shadowRoot.querySelector('#goal');
           let diffGoalHandles = parseInt(newValue) - parseInt(oldValue);
@@ -147,6 +155,9 @@ export default class Event extends HTMLElement {
 
         break;
       case 'end':
+        {const length = parseInt(newValue) - this.start;
+        this.shadowRoot.host.style.setProperty('--length', length);}
+
         if(this.#actionType === 'resizing' || this.#actionType === '') {
           const goalHandlersContainer = this.shadowRoot.querySelector('#goal');
           let diffGoalHandles = parseInt(newValue) - parseInt(oldValue);
@@ -168,6 +179,12 @@ export default class Event extends HTMLElement {
         }
 
         this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}}));
+
+        break;
+      case 'handleindex':
+        // compensate for left drag handle
+        const handleIndex = parseInt(newValue) + 1;
+        this.#goalIconNode.style.setProperty('grid-column', handleIndex);
 
         break;
     }
@@ -245,7 +262,7 @@ export default class Event extends HTMLElement {
       e.preventDefault();
     });
 
-    this.#goalNode.appendChild(dragNode);
+    this.shadowRoot.insertBefore(dragNode, this.#rightDragNode);
   }
 
   set start(start) {
