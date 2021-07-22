@@ -3,48 +3,41 @@
   --length: 1;
 
   display: grid;
-  grid-template-columns: 0.2em repeat(var(--length), 1fr) 0.2em;
+  grid-template-columns: repeat(var(--length), 1fr);
   grid-template-rows: $goalHeight $goalHeight;
   grid-row-gap: 1em;
 
-  .dragHandler {
-    grid-row: 2/3;
-    background-color: cornflowerblue;
-
-    cursor: move;
-    //opacity: 0;
-  }
-
   #goal {
-    background-color: cornflowerblue;
-    height: $goalHeight;
-
-    grid-column: 2/3;
-    grid-row: 2/3;
-
-    display: flex;
+    display: contents;
 
     .dragHandler {
-      width: 1.4em;
 
+      grid-row: 2/3;
 
-      &:first-child {
-        width: 1.2em;
-      }
-
-      &:last-child {
-        width: 1.2em;
-      }
-
+      cursor: move;
+      opacity: 0;
     }
   }
 
+  #goalStrip {
+    grid-column-start: 1;
+    grid-column-end: calc(var(--length) + 1);
+    grid-row: 2;
+
+    background-color: cornflowerblue;
+  }
+
   #goalLeft {
-    grid-row: 2/3;
+    grid-column: 1;
+
+    width: 0.2em;
   }
 
   #goalRight {
-    grid-row: 2/3;
+    grid-column: calc(var(--length));
+    justify-self: right;
+
+    width: 0.2em;
   }
 
   #goalLeft,

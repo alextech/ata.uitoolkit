@@ -9,11 +9,12 @@ eventTpl.innerHTML = `
     <img draggable="false" src="" alt="" />
 </div>
 <!--<div class="existingGoal" style="height: 2em; background-color: cornflowerblue">-->
-  <div id="goalLeft" draggable="true">&nbsp;</div>
+  <div id="goalLeft" draggable="true" data-handle-index="1">&nbsp;</div>
   
-<!--  <div id="goal"></div>-->
+  <div id="goal"></div>
   
   <div id="goalRight" draggable="true">&nbsp;</div>
+  <div id="goalStrip">&nbsp;</div>
 <!--</div>-->
 `;
 
@@ -82,6 +83,13 @@ export default class Event extends HTMLElement {
         handleIndex: parseInt(e.target.dataset.handleIndex)
       }}))
     });
+
+    goalRight.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+    });
+    goalRight.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
     goalRight.addEventListener('dragend',  () => {
       this.#actionType = '';
 
@@ -118,6 +126,12 @@ export default class Event extends HTMLElement {
         eventId: this.getAttribute('event-id'),
       }))
     });
+    goalLeft.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+    });
+    goalLeft.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
 
 
   }
@@ -128,7 +142,7 @@ export default class Event extends HTMLElement {
 
     switch (attribute) {
       case 'start':
-        {const length = this.end - parseInt(newValue);
+        {const length = this.end - parseInt(newValue) + 1;
         this.shadowRoot.host.style.setProperty('--length', length);}
 
         if(this.#actionType === 'resizing' || this.#actionType === '') {
@@ -155,7 +169,7 @@ export default class Event extends HTMLElement {
 
         break;
       case 'end':
-        {const length = parseInt(newValue) - this.start;
+        {const length = parseInt(newValue) - this.start + 1;
         this.shadowRoot.host.style.setProperty('--length', length);}
 
         if(this.#actionType === 'resizing' || this.#actionType === '') {
@@ -195,6 +209,7 @@ export default class Event extends HTMLElement {
     dragNode.className = 'dragHandler';
     dragNode.draggable = true;
     dragNode.dataset.handleIndex = index+'';
+    dragNode.style.setProperty('grid-column', index+'');
 
     /* ------------------------------------- *\
     |
@@ -262,7 +277,7 @@ export default class Event extends HTMLElement {
       e.preventDefault();
     });
 
-    this.shadowRoot.insertBefore(dragNode, this.#rightDragNode);
+    this.shadowRoot.querySelector('#goal').appendChild(dragNode);
   }
 
   set start(start) {
