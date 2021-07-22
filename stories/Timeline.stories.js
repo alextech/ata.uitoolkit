@@ -59,14 +59,12 @@ TimelineWithEvent.args = {
     {
       start: 2025,
       end: 2033,
-      handleIndex: 3,
       event_id: "sample_1",
       icon: event_1_Icon
     },
     {
       start: 2035,
       end: 2041,
-      handleIndex: 3,
       event_id: "sample_2",
       icon: event_1_Icon
     },

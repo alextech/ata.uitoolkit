@@ -55,7 +55,7 @@
 
   #goalIcon {
     grid-row: 1/2;
-    margin: 0 0 0 -0.8em;
+    margin: 0 0 0 -0.3em;
 
     img {
       border: 1px solid #1F585F;
@@ -74,5 +74,9 @@
       height: 1em;
       margin: 0 auto;
     }
+  }
+
+  #goalIcon.widthOne {
+    position: absolute;
   }
 }

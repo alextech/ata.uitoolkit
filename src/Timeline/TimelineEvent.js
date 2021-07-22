@@ -20,7 +20,7 @@ eventTpl.innerHTML = `
 
 export default class Event extends HTMLElement {
   static get observedAttributes() {
-    return ['start', 'end', 'handleindex'];
+    return ['start', 'end'];
   }
 
   #moveIndex = -1;
@@ -141,64 +141,62 @@ export default class Event extends HTMLElement {
 
 
     switch (attribute) {
-      case 'start':
-        {const length = this.end - parseInt(newValue) + 1;
-        this.shadowRoot.host.style.setProperty('--length', length);}
+      case 'start': {
+        const length = this.end - parseInt(newValue) + 1;
+        this.shadowRoot.host.style.setProperty('--length', length);
+      }
 
-        if(this.#actionType === 'resizing' || this.#actionType === '') {
+        if (this.#actionType === 'resizing' || this.#actionType === '') {
           const goalHandlersContainer = this.shadowRoot.querySelector('#goal');
           let diffGoalHandles = parseInt(newValue) - parseInt(oldValue);
 
-          if(diffGoalHandles > 0) {
+          if (diffGoalHandles > 0) {
             while (diffGoalHandles > 0) {
-              if(goalHandlersContainer.lastElementChild != null)
-              {
+              if (goalHandlersContainer.lastElementChild != null) {
                 goalHandlersContainer.removeChild(goalHandlersContainer.lastElementChild);
               }
               diffGoalHandles--;
             }
           } else {
-            while(diffGoalHandles < 0) {
+            while (diffGoalHandles < 0) {
               this.#addDragNodeAtIndex(goalHandlersContainer.childElementCount + 1);
               diffGoalHandles++;
             }
           }
         }
+
+        this.#positionIcon();
 
         this.dispatchEvent(new CustomEvent("startchanged", {detail: {start: newValue}}));
 
         break;
-      case 'end':
-        {const length = parseInt(newValue) - this.start + 1;
-        this.shadowRoot.host.style.setProperty('--length', length);}
+      case 'end': {
+        const length = parseInt(newValue) - this.start + 1;
+        this.shadowRoot.host.style.setProperty('--length', length);
+      }
 
-        if(this.#actionType === 'resizing' || this.#actionType === '') {
+        if (this.#actionType === 'resizing' || this.#actionType === '') {
           const goalHandlersContainer = this.shadowRoot.querySelector('#goal');
           let diffGoalHandles = parseInt(newValue) - parseInt(oldValue);
 
-          if(diffGoalHandles < 0) {
+          if (diffGoalHandles < 0) {
             while (diffGoalHandles < 0) {
-              if(goalHandlersContainer.lastElementChild != null)
-              {
+              if (goalHandlersContainer.lastElementChild != null) {
                 goalHandlersContainer.removeChild(goalHandlersContainer.lastElementChild);
               }
               diffGoalHandles++;
             }
           } else {
-            while(diffGoalHandles > 0) {
+            while (diffGoalHandles > 0) {
               this.#addDragNodeAtIndex(goalHandlersContainer.childElementCount + 1);
               diffGoalHandles--;
             }
           }
         }
 
-        this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}}));
+        this.#positionIcon();
 
-        break;
-      case 'handleindex':
-        // compensate for left drag handle
-        const handleIndex = parseInt(newValue) + 1;
-        this.#goalIconNode.style.setProperty('grid-column', handleIndex);
+        this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}}));
 
         break;
     }
@@ -279,6 +277,18 @@ export default class Event extends HTMLElement {
 
     this.shadowRoot.querySelector('#goal').appendChild(dragNode);
   }
+
+
+  #positionIcon() {
+    const third = Math.floor((this.end - this.start) / 3 + 1);
+    if(third === 1) {
+      this.#goalIconNode.classList.add('widthOne');
+    } else {
+      this.#goalIconNode.classList.remove('widthOne');
+    }
+    this.#goalIconNode.style.setProperty('grid-column', third);
+  }
+
 
   set start(start) {
     this.setAttribute('start', start);
