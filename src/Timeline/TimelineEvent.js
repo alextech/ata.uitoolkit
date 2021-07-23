@@ -81,7 +81,7 @@ export default class Event extends HTMLElement {
         fromStart: this.#originalStart,
         fromEnd: this.#originalEnd,
         handleIndex: parseInt(e.target.dataset.handleIndex)
-      }}))
+      }, bubbles: true, composed: true}))
     });
 
     goalRight.addEventListener('dragenter', (e) => {
@@ -93,9 +93,9 @@ export default class Event extends HTMLElement {
     goalRight.addEventListener('dragend',  () => {
       this.#actionType = '';
 
-      this.dispatchEvent(new CustomEvent('resizeEnd', {
+      this.dispatchEvent(new CustomEvent('resizeEnd', {detail: {
         eventId: this.getAttribute('event-id'),
-      }))
+      }, bubbles: true, composed: true}));
     });
 
 
@@ -117,14 +117,14 @@ export default class Event extends HTMLElement {
         fromStart: this.#originalStart,
         fromEnd: this.#originalEnd,
         handleIndex: parseInt(e.target.dataset.handleIndex)
-      }}))
+      }, bubbles: true, composed: true}));
     });
     goalLeft.addEventListener('dragend',  () => {
       this.#actionType = '';
 
-      this.dispatchEvent(new CustomEvent('resizeEnd', {
+      this.dispatchEvent(new CustomEvent('resizeEnd', {detail: {
         eventId: this.getAttribute('event-id'),
-      }))
+      }, bubbles: true, composed: true}));
     });
     goalLeft.addEventListener('dragenter', (e) => {
       e.preventDefault();
@@ -167,7 +167,7 @@ export default class Event extends HTMLElement {
 
         this.#positionIcon();
 
-        this.dispatchEvent(new CustomEvent("startchanged", {detail: {start: newValue}}));
+        this.dispatchEvent(new CustomEvent("startchanged", {detail: {start: newValue}, bubbles: true, composed: true}));
 
         break;
       case 'end': {
@@ -196,7 +196,7 @@ export default class Event extends HTMLElement {
 
         this.#positionIcon();
 
-        this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}}));
+        this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}, bubbles: true, composed: true}));
 
         break;
     }
@@ -224,13 +224,13 @@ export default class Event extends HTMLElement {
           fromStart: this.#originalStart,
           fromEnd: this.#originalEnd,
           handleIndex: parseInt(e.target.dataset.handleIndex),
-        }}));
+        }, bubbles: true, composed: true}));
 
       this.#moveIndex = parseInt(e.target.dataset.handleIndex);
     });
 
     dragNode.addEventListener('dragend', () => {
-      this.dispatchEvent(new CustomEvent('moveEnd'));
+      this.dispatchEvent(new CustomEvent('moveEnd', {bubbles: true, composed: true}));
 
       this.#actionType = '';
 
@@ -245,7 +245,7 @@ export default class Event extends HTMLElement {
           this.dispatchEvent(new CustomEvent('moveEnter', {detail: {
               targetIndex: parseInt(e.target.dataset.handleIndex),
               handleIndex: this.#moveIndex,
-            }}));
+            }, bubbles: true, composed: true}));
 
           break;
         case 'resizing':

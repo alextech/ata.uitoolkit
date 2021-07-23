@@ -20,6 +20,7 @@ export default class Timeline extends HTMLElement {
   #dragChildEvent = null;
   #resizeChildEvent = null;
   #dragNewEventStart = null;
+  #newEventPlaceholder = null;
   #currentTargetYear = -1;
 
   constructor() {
@@ -40,10 +41,7 @@ export default class Timeline extends HTMLElement {
     });
     contentObserver.observe(this, {childList: true});
 
-    // TODO tmp test
-    // this.addEventListener('EventChanged', (e) => {
-    //   console.log("dropped dispatched eventchanged on id", e.detail);
-    // });
+    this.#setupListeners();
 
     this.#renderEvents();
   }
@@ -89,7 +87,6 @@ export default class Timeline extends HTMLElement {
     let currentYear = this.startingYear;
     for (let i = 1; i <= years; i++) {
       const column = i;
-      // <div class="dropTarget" style="grid-row: 1/5;" draggable="true" />
       const dropTarget = document.createElement('div');
       dropTarget.className = 'dropTarget';
       dropTarget.className = 'dropTarget';
@@ -101,6 +98,15 @@ export default class Timeline extends HTMLElement {
 
       dropTarget.addEventListener('dragstart', (e) => {
         this.#dragNewEventStart = e.target.dataset.year;
+        this.#newEventPlaceholder = document.createElement('div');
+        this.#newEventPlaceholder.classList.add('newEventPlaceholder');
+
+        this.#newEventPlaceholder.style.setProperty('grid-row', '4');
+        this.#newEventPlaceholder.style.setProperty('grid-column-start', e.target.dataset.column);
+        this.#newEventPlaceholder.style.setProperty('grid-column-end', parseInt(e.target.dataset.column) + 1 + '');
+        this.#newEventPlaceholder.dataset.dragStart = e.target.dataset.column;
+
+        this.shadowRoot.appendChild(this.#newEventPlaceholder);
       });
       dropTarget.addEventListener('dragend', () => {
         if (this.#dragNewEventStart != null) {
@@ -112,6 +118,8 @@ export default class Timeline extends HTMLElement {
 
         this.#dragNewEventStart = null;
         this.#currentTargetYear = -1;
+        this.shadowRoot.removeChild(this.#newEventPlaceholder);
+        this.#newEventPlaceholder = null;
       });
 
       dropTarget.addEventListener('dragenter', (e) => {
@@ -138,6 +146,23 @@ export default class Timeline extends HTMLElement {
 
               break;
           }
+        }
+
+        if (this.#newEventPlaceholder != null) {
+          let target = parseInt(e.target.dataset.column) + 1;
+          let origin = parseInt(this.#newEventPlaceholder.dataset.dragStart);
+
+          let start, end;
+          if (target < origin) {
+            start = target - 1;
+            end = origin + 1;
+          } else {
+            start = origin;
+            end = target;
+          }
+
+          this.#newEventPlaceholder.style.setProperty('grid-column-start', start);
+          this.#newEventPlaceholder.style.setProperty('grid-column-end', end);
         }
       });
 
@@ -224,92 +249,96 @@ export default class Timeline extends HTMLElement {
 
       this.#processedEvents.push(eventId);
 
-      /* ------------------------------------- *\
+
+    }
+  }
+
+  #setupListeners() {
+    /* ------------------------------------- *\
       |
       | Event dispatch setup
       |
       \* ------------------------------------- */
-      event.addEventListener('moveStart', (e) => {
-        this.#dragChildEvent = e;
-      });
-      event.addEventListener('moveEnd', () => {
-        const from = {
-          start: this.#dragChildEvent.detail.fromStart,
-          end: this.#dragChildEvent.detail.fromEnd
-        };
+    this.addEventListener('moveStart', (e) => {
+      this.#dragChildEvent = e;
+    });
+    this.addEventListener('moveEnd', () => {
+      const from = {
+        start: this.#dragChildEvent.detail.fromStart,
+        end: this.#dragChildEvent.detail.fromEnd
+      };
 
-        const to = {
-          start: parseInt(this.#dragChildEvent.target.getAttribute('start')),
-          end: parseInt(this.#dragChildEvent.target.getAttribute('end'))
-        }
+      const to = {
+        start: parseInt(this.#dragChildEvent.target.getAttribute('start')),
+        end: parseInt(this.#dragChildEvent.target.getAttribute('end'))
+      }
 
-        if (from.start !== to.start || from.end !== to.end) {
-          this.dispatchEvent(new CustomEvent('EventChanged', {detail: {
-              eventId: this.#dragChildEvent.target.getAttribute('event-id'),
-              from: from,
-              to: to,
-              thirdOfTotal: 1,
-            }}));
-        }
-
-
-        this.#dragChildEvent = null;
-      });
-      event.addEventListener('resizeStart', (e) => {
-        this.#resizeChildEvent = e;
-      });
-      event.addEventListener('resizeEnd', () => {
-        const from = {
-          start: this.#resizeChildEvent.detail.fromStart,
-          end: this.#resizeChildEvent.detail.fromEnd
-        };
-
-        const to = {
-          start: parseInt(this.#resizeChildEvent.target.getAttribute('start')),
-          end: parseInt(this.#resizeChildEvent.target.getAttribute('end'))
-        }
-
-        if (from.start !== to.start || from.end !== to.end) {
-          this.dispatchEvent(new CustomEvent('EventChanged', {
-            detail: {
-              eventId: this.#resizeChildEvent.target.getAttribute('event-id'),
-              from: from,
-              to: to,
-              thirdOfTotal: 1,
-            }
-          }));
-        }
-
-        this.#resizeChildEvent = null;
-      })
-      /*
-      | -------------------------------------------- */
+      if (from.start !== to.start || from.end !== to.end) {
+        this.dispatchEvent(new CustomEvent('EventChanged', {detail: {
+            eventId: this.#dragChildEvent.target.getAttribute('event-id'),
+            from: from,
+            to: to,
+            thirdOfTotal: 1,
+          }}));
+      }
 
 
+      this.#dragChildEvent = null;
+    });
+    this.addEventListener('resizeStart', (e) => {
+      this.#resizeChildEvent = e;
+    });
+    this.addEventListener('resizeEnd', () => {
+      const from = {
+        start: this.#resizeChildEvent.detail.fromStart,
+        end: this.#resizeChildEvent.detail.fromEnd
+      };
 
-      /* ------------------------------------- *\
-      |
-      | Coordinate updating section
-      |
-      \* ------------------------------------- */
-      event.addEventListener('startchanged', (e) => {
-        const newStartCol = e.detail.start - this.startingYear + 1;
-        e.target.style.setProperty('grid-column-start', newStartCol);
-      });
+      const to = {
+        start: parseInt(this.#resizeChildEvent.target.getAttribute('start')),
+        end: parseInt(this.#resizeChildEvent.target.getAttribute('end'))
+      }
 
-      event.addEventListener('endchanged', (e) => {
-        // offset extra + 1 for CSS grid column end
-        const newStartCol = e.detail.end - this.startingYear + 2;
-        e.target.style.setProperty('grid-column-end', newStartCol);
-      });
+      if (from.start !== to.start || from.end !== to.end) {
+        this.dispatchEvent(new CustomEvent('EventChanged', {
+          detail: {
+            eventId: this.#resizeChildEvent.target.getAttribute('event-id'),
+            from: from,
+            to: to,
+            thirdOfTotal: 1,
+          }
+        }));
+      }
 
-      event.addEventListener('moveEnter', (e) => {
-        const targetColumn = e.detail.targetIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
-        this.#updateEventBoundaries(targetColumn)
-      });
-      /*
-      | -------------------------------------------- */
-    }
+      this.#resizeChildEvent = null;
+    })
+    /*
+    | -------------------------------------------- */
+
+
+
+    /* ------------------------------------- *\
+    |
+    | Coordinate updating section
+    |
+    \* ------------------------------------- */
+    this.addEventListener('startchanged', (e) => {
+      const newStartCol = e.detail.start - this.startingYear + 1;
+      e.target.style.setProperty('grid-column-start', newStartCol);
+    });
+
+    this.addEventListener('endchanged', (e) => {
+      // offset extra + 1 for CSS grid column end
+      const newStartCol = e.detail.end - this.startingYear + 2;
+      e.target.style.setProperty('grid-column-end', newStartCol);
+    });
+
+    this.addEventListener('moveEnter', (e) => {
+      const targetColumn = e.detail.targetIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
+      this.#updateEventBoundaries(targetColumn)
+    });
+    /*
+    | -------------------------------------------- */
   }
 
   #updateEventBoundaries(targetColumn) {
