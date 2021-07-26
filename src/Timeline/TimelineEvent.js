@@ -1,13 +1,14 @@
 'use strict';
 
 import style from './TimelineEvent.scss';
+import lightDomStyle from './TimelineEventLight.scss';
 
 
 const eventTpl = document.createElement('template');
 eventTpl.innerHTML = `
-<div id="goalIcon">
-    <img draggable="false" src="" alt="" />
-</div>
+<slot name="goalIcon">
+    
+</slot>
 <!--<div class="existingGoal" style="height: 2em; background-color: cornflowerblue">-->
   <div id="goalLeft" draggable="true" data-handle-index="1">&nbsp;</div>
   
@@ -32,28 +33,37 @@ export default class Event extends HTMLElement {
   #actionDirection;
   #rightDragNode;
 
-  #goalIconNode;
-
-
   constructor() {
     super();
 
     this.attachShadow({mode: 'open'});
     this.shadowRoot.appendChild(eventTpl.content.cloneNode(true));
     this.shadowRoot.adoptedStyleSheets = [style];
-
-    this.#rightDragNode = this.shadowRoot.querySelector('#goalRight');
-    this.#goalIconNode = this.shadowRoot.querySelector('#goalIcon');
+    document.adoptedStyleSheets = [ ...document.adoptedStyleSheets, lightDomStyle ];
   }
 
   connectedCallback() {
-    const startColumn = parseInt(this.getAttribute('start')) - this.parentElement.startingYear;
-    const endColumn = parseInt(this.getAttribute('end')) - this.parentElement.startingYear;
+    this.#rightDragNode = this.shadowRoot.querySelector('#goalRight');
 
-    const iconColumn = Math.floor(startColumn + (endColumn - startColumn) / 2);
-    const icon = this.shadowRoot.querySelectorAll('img')[0];
-    icon.src = this.getAttribute('icon');
-    icon.style.setProperty('grid-column', `${iconColumn} / ${iconColumn + 1}`);
+    const contentObserver = new MutationObserver((mutationsList) => {
+      for (const mutationRecord of mutationsList) {
+        if (mutationRecord.addedNodes.length > 0) {
+
+          let i = 0;
+          do {
+            const addedNode = mutationRecord.addedNodes[i];
+            if (!(addedNode instanceof Element) || addedNode.getAttribute('slot') !== 'goalIcon') continue;
+
+            this.#positionIcon();
+
+            i++;
+          } while(i > mutationRecord.addedNodes.length)
+
+
+        }
+      }
+    });
+    contentObserver.observe(this, {childList: true});
 
     const end = parseInt(this.getAttribute('end'));
     const start = parseInt(this.getAttribute('start'))
@@ -280,13 +290,16 @@ export default class Event extends HTMLElement {
 
 
   #positionIcon() {
+    const goalIconNode = this.querySelector('a[slot="goalIcon"]');
+
+
     const third = Math.floor((this.end - this.start) / 3 + 1);
     if(third === 1) {
-      this.#goalIconNode.classList.add('widthOne');
+      goalIconNode.classList.add('widthOne');
     } else {
-      this.#goalIconNode.classList.remove('widthOne');
+      goalIconNode.classList.remove('widthOne');
     }
-    this.#goalIconNode.style.setProperty('grid-column', third);
+    goalIconNode.style.setProperty('grid-column', third);
   }
 
 

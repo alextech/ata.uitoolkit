@@ -1,0 +1,28 @@
+ata-timeline-event {
+  a {
+
+    &:after {
+      content: " ";
+      background-color: #1F585F;
+      display: block;
+      width: 2px;
+      height: 1em;
+      margin: 0 auto;
+    }
+
+    img {
+      border: 1px solid #1F585F;
+      display: block;
+      padding: 0;
+      text-align: center;
+      background-color: darkseagreen;
+      width: 2em;
+      margin: 0 0 0 -0.3em;
+
+    }
+  }
+
+  a.widthOne img {
+    position: absolute;
+  }
+}
