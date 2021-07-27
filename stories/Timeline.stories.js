@@ -1,11 +1,11 @@
 import '../src/index';
-import event_1_Icon from './assets/dollar.png';
+import item_1_Icon from './assets/dollar.png';
 
 export default {
   title: 'ATA/Timeline',
   argTypes: {
-    NewEventRequest: { action: 'NewEventRequest' },
-    EventChanged: { action: 'EventChanged' }
+    NewItemRequest: { action: 'NewItemRequest' },
+    ItemChanged: { action: 'ItemChanged' }
   }
 }
 
@@ -19,30 +19,30 @@ const TimelineTemplate = (args) => {
       age="${args.age}"
   >`;
 
-  for (const item of args.events ?? []) {
+  for (const item of args.items ?? []) {
     innerHtml += `
-        <ata-timeline-event 
-            event-id="${item.item_id}" 
+        <ata-timeline-item 
+            item-id="${item.item_id}" 
             start="${item.start}" end="${item.end}" icon=""
             handleIndex="${item.handleIndex}"
-            slot="events">
+            slot="items">
             
             <a href="/" slot="itemIcon">
                 <img src="${item.icon}" alt="${item.item_name}" />
             </a>
             
-        </ata-timeline-event>`;
+        </ata-timeline-item>`;
   }
 
   innerHtml += '</ata-timeline>';
   tpl.innerHTML = innerHtml;
 
   const timelineEl = tpl.firstElementChild;
-  timelineEl.addEventListener('NewEventRequest', (e) => {
-    args.NewEventRequest(e.detail);
+  timelineEl.addEventListener('NewItemRequest', (e) => {
+    args.NewItemRequest(e.detail);
   });
-  timelineEl.addEventListener('EventChanged', (e) => {
-    args.EventChanged(e.detail);
+  timelineEl.addEventListener('ItemChanged', (e) => {
+    args.ItemChanged(e.detail);
   });
 
   return timelineEl;
@@ -55,26 +55,26 @@ EmptyTimeline.args = {
   startingYear: 2021,
 }
 
-export const TimelineWithEvent = TimelineTemplate.bind({});
-TimelineWithEvent.args = {
+export const TimelineWithItem = TimelineTemplate.bind({});
+TimelineWithItem.args = {
   years: 35,
   age: 34,
   startingYear: 2021,
 
-  events: [
+  items: [
     {
       start: 2025,
       end: 2033,
       item_id: "sample_1",
       item_name: "sample 1",
-      icon: event_1_Icon
+      icon: item_1_Icon
     },
     {
       start: 2035,
       end: 2041,
       item_id: "sample_2",
       item_name: "sample 2",
-      icon: event_1_Icon
+      icon: item_1_Icon
     },
   ],
 

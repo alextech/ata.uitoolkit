@@ -1,11 +1,11 @@
 import {Timeline} from "./Timeline";
-import TimelineEvent from "./Timeline/TimelineEvent";
+import TimelineItem from "./Timeline/TimelineItem";
 
 if(!customElements.get('ata-timeline')) {
     customElements.define('ata-timeline', Timeline);
 }
 
-if(!customElements.get('ata-timeline-event')) {
-    customElements.define('ata-timeline-event', TimelineEvent);
+if(!customElements.get('ata-timeline-item')) {
+    customElements.define('ata-timeline-item', TimelineItem);
 }
 

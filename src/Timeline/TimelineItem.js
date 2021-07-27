@@ -1,7 +1,7 @@
 'use strict';
 
-import style from './TimelineEvent.scss';
-import lightDomStyle from './TimelineEventLight.scss';
+import style from './TimelineItem.scss';
+import lightDomStyle from './TimelineItemLight.scss';
 
 
 const eventTpl = document.createElement('template');
@@ -291,6 +291,7 @@ export default class Event extends HTMLElement {
     const itemIconNode = this.querySelector('a[slot="itemIcon"]');
     if (itemIconNode === null) return;
     itemIconNode.setAttribute('draggable', false);
+    itemIconNode.querySelector('img').setAttribute('draggable', false);
 
 
     const third = Math.floor((this.end - this.start) / 3 + 1);
@@ -325,6 +326,6 @@ export default class Event extends HTMLElement {
 
 }
 
-if(!customElements.get('ata-timeline-event')) {
-  customElements.define('ata-timeline-event', Event);
+if(!customElements.get('ata-timeline-item')) {
+  customElements.define('ata-timeline-item', Event);
 }

@@ -19,8 +19,8 @@ export default class Timeline extends HTMLElement {
   #maxYear;
   #dragChildEvent = null;
   #resizeChildEvent = null;
-  #dragNewEventStart = null;
-  #newEventPlaceholder = null;
+  #dragNewItemStart = null;
+  #newItemPlaceholder = null;
   #currentTargetYear = -1;
 
   constructor() {
@@ -35,7 +35,7 @@ export default class Timeline extends HTMLElement {
     const contentObserver = new MutationObserver((mutationsList) => {
       for (const mutationRecord of mutationsList) {
         if (mutationRecord.addedNodes.length > 0) {
-          this.#renderEvents();
+          this.#renderItems();
         }
       }
     });
@@ -43,7 +43,7 @@ export default class Timeline extends HTMLElement {
 
     this.#setupListeners();
 
-    this.#renderEvents();
+    this.#renderItems();
   }
 
   attributeChangedCallback(attribute, oldValue, newValue) {
@@ -52,7 +52,7 @@ export default class Timeline extends HTMLElement {
     switch (attribute) {
       case 'years':
         this.#setupGrid(parseInt(newValue));
-        this.#renderEvents();
+        this.#renderItems();
 
         break;
 
@@ -63,7 +63,7 @@ export default class Timeline extends HTMLElement {
 
       case 'startingyear':
         Timeline.#updateStartingYear(parseInt(newValue), this.shadowRoot);
-        this.#renderEvents();
+        this.#renderItems();
 
         break;
     }
@@ -97,36 +97,36 @@ export default class Timeline extends HTMLElement {
       dropTarget.dataset.year = (currentYear++)+'';
 
       dropTarget.addEventListener('dragstart', (e) => {
-        this.#dragNewEventStart = e.target.dataset.year;
-        this.#newEventPlaceholder = document.createElement('div');
-        this.#newEventPlaceholder.classList.add('newEventPlaceholder');
+        this.#dragNewItemStart = e.target.dataset.year;
+        this.#newItemPlaceholder = document.createElement('div');
+        this.#newItemPlaceholder.classList.add('newItemPlaceholder');
 
-        this.#newEventPlaceholder.style.setProperty('grid-row', '4');
-        this.#newEventPlaceholder.style.setProperty('grid-column-start', e.target.dataset.column);
-        this.#newEventPlaceholder.style.setProperty('grid-column-end', parseInt(e.target.dataset.column) + 1 + '');
-        this.#newEventPlaceholder.dataset.dragStart = e.target.dataset.column;
+        this.#newItemPlaceholder.style.setProperty('grid-row', '4');
+        this.#newItemPlaceholder.style.setProperty('grid-column-start', e.target.dataset.column);
+        this.#newItemPlaceholder.style.setProperty('grid-column-end', parseInt(e.target.dataset.column) + 1 + '');
+        this.#newItemPlaceholder.dataset.dragStart = e.target.dataset.column;
 
-        this.shadowRoot.appendChild(this.#newEventPlaceholder);
+        this.shadowRoot.appendChild(this.#newItemPlaceholder);
       });
       dropTarget.addEventListener('dragend', () => {
-        if (this.#dragNewEventStart != null) {
-          this.dispatchEvent(new CustomEvent('NewEventRequest', {detail: {
-              start: parseInt(this.#dragNewEventStart),
+        if (this.#dragNewItemStart != null) {
+          this.dispatchEvent(new CustomEvent('NewItemRequest', {detail: {
+              start: parseInt(this.#dragNewItemStart),
               end: this.#currentTargetYear,
             }}));
         }
 
-        this.#dragNewEventStart = null;
+        this.#dragNewItemStart = null;
         this.#currentTargetYear = -1;
-        this.shadowRoot.removeChild(this.#newEventPlaceholder);
-        this.#newEventPlaceholder = null;
+        this.shadowRoot.removeChild(this.#newItemPlaceholder);
+        this.#newItemPlaceholder = null;
       });
 
       dropTarget.addEventListener('dragenter', (e) => {
         this.#currentTargetYear = parseInt(e.target.dataset.year);
 
         if (this.#dragChildEvent != null) {
-          this.#updateEventBoundaries(parseInt(e.target.dataset.column));
+          this.#updateItemBoundaries(parseInt(e.target.dataset.column));
         }
 
         if (this.#resizeChildEvent != null) {
@@ -148,9 +148,9 @@ export default class Timeline extends HTMLElement {
           }
         }
 
-        if (this.#newEventPlaceholder != null) {
+        if (this.#newItemPlaceholder != null) {
           let target = parseInt(e.target.dataset.column) + 1;
-          let origin = parseInt(this.#newEventPlaceholder.dataset.dragStart);
+          let origin = parseInt(this.#newItemPlaceholder.dataset.dragStart);
 
           let start, end;
           if (target < origin) {
@@ -161,8 +161,8 @@ export default class Timeline extends HTMLElement {
             end = target;
           }
 
-          this.#newEventPlaceholder.style.setProperty('grid-column-start', start);
-          this.#newEventPlaceholder.style.setProperty('grid-column-end', end);
+          this.#newItemPlaceholder.style.setProperty('grid-column-start', start);
+          this.#newItemPlaceholder.style.setProperty('grid-column-end', end);
         }
       });
 
@@ -199,7 +199,7 @@ export default class Timeline extends HTMLElement {
 
 
     const slot = document.createElement('slot');
-    slot.setAttribute('name', 'events');
+    slot.setAttribute('name', 'items');
     this.shadowRoot.appendChild(slot);
   }
 
@@ -231,23 +231,25 @@ export default class Timeline extends HTMLElement {
     }
   }
 
-  #processedEvents = [];
-  #renderEvents() {
-    const events = this.getElementsByTagName('ata-timeline-event');
+  #processedItems = [];
+  #renderItems() {
+    const items = this.getElementsByTagName('ata-timeline-item');
 
-    for (const event of events) {
-      const startColumn = parseInt(event.getAttribute('start')) - this.startingYear + 1;
-      const endColumn = parseInt(event.getAttribute('end')) - this.startingYear + 2;
-      event.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
-      event.style.setProperty('grid-row', '3 / 5');
-      event.style.setProperty('z-index', 101);
+    for (const item of items) {
+      item.setAttribute('slot', 'items');
 
-      const eventId = event.getAttribute('event-id');
-      if (this.#processedEvents.includes(eventId)) {
+      const startColumn = parseInt(item.getAttribute('start')) - this.startingYear + 1;
+      const endColumn = parseInt(item.getAttribute('end')) - this.startingYear + 2;
+      item.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
+      item.style.setProperty('grid-row', '3 / 5');
+      item.style.setProperty('z-index', 101);
+
+      const itemId = item.getAttribute('item-id');
+      if (this.#processedItems.includes(itemId)) {
         continue;
       }
 
-      this.#processedEvents.push(eventId);
+      this.#processedItems.push(itemId);
 
 
     }
@@ -274,8 +276,8 @@ export default class Timeline extends HTMLElement {
       }
 
       if (from.start !== to.start || from.end !== to.end) {
-        this.dispatchEvent(new CustomEvent('EventChanged', {detail: {
-            eventId: this.#dragChildEvent.target.getAttribute('event-id'),
+        this.dispatchEvent(new CustomEvent('ItemChanged', {detail: {
+            itemId: this.#dragChildEvent.target.getAttribute('item-id'),
             from: from,
             to: to,
             thirdOfTotal: 1,
@@ -300,9 +302,9 @@ export default class Timeline extends HTMLElement {
       }
 
       if (from.start !== to.start || from.end !== to.end) {
-        this.dispatchEvent(new CustomEvent('EventChanged', {
+        this.dispatchEvent(new CustomEvent('ItemChanged', {
           detail: {
-            eventId: this.#resizeChildEvent.target.getAttribute('event-id'),
+            itemId: this.#resizeChildEvent.target.getAttribute('item-id'),
             from: from,
             to: to,
             thirdOfTotal: 1,
@@ -335,13 +337,13 @@ export default class Timeline extends HTMLElement {
 
     this.addEventListener('moveEnter', (e) => {
       const targetColumn = e.detail.targetIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
-      this.#updateEventBoundaries(targetColumn)
+      this.#updateItemBoundaries(targetColumn)
     });
     /*
     | -------------------------------------------- */
   }
 
-  #updateEventBoundaries(targetColumn) {
+  #updateItemBoundaries(targetColumn) {
     const e = this.#dragChildEvent;
     const originalColumn = e.detail.handleIndex + parseInt(e.target.getAttribute('start')) - this.startingYear;
 
