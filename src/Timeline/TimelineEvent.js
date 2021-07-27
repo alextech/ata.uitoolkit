@@ -6,17 +6,15 @@ import lightDomStyle from './TimelineEventLight.scss';
 
 const eventTpl = document.createElement('template');
 eventTpl.innerHTML = `
-<slot name="goalIcon">
+<slot name="itemIcon">
     
 </slot>
-<!--<div class="existingGoal" style="height: 2em; background-color: cornflowerblue">-->
-  <div id="goalLeft" draggable="true" data-handle-index="1">&nbsp;</div>
+  <div id="itemLeft" draggable="true" data-handle-index="1">&nbsp;</div>
   
-  <div id="goal"></div>
+  <div id="item"></div>
   
-  <div id="goalRight" draggable="true">&nbsp;</div>
-  <div id="goalStrip">&nbsp;</div>
-<!--</div>-->
+  <div id="itemRight" draggable="true">&nbsp;</div>
+  <div id="itemStrip">&nbsp;</div>
 `;
 
 export default class Event extends HTMLElement {
@@ -43,7 +41,7 @@ export default class Event extends HTMLElement {
   }
 
   connectedCallback() {
-    this.#rightDragNode = this.shadowRoot.querySelector('#goalRight');
+    this.#rightDragNode = this.shadowRoot.querySelector('#itemRight');
 
     const contentObserver = new MutationObserver((mutationsList) => {
       for (const mutationRecord of mutationsList) {
@@ -52,7 +50,7 @@ export default class Event extends HTMLElement {
           let i = 0;
           do {
             const addedNode = mutationRecord.addedNodes[i];
-            if (!(addedNode instanceof Element) || addedNode.getAttribute('slot') !== 'goalIcon') continue;
+            if (!(addedNode instanceof Element) || addedNode.getAttribute('slot') !== 'itemIcon') continue;
 
             this.#positionIcon();
 
@@ -78,8 +76,8 @@ export default class Event extends HTMLElement {
     | Right Resizing dragging setup
     |
     \* ------------------------------------- */
-    const goalRight = this.shadowRoot.querySelector('#goalRight');
-    goalRight.addEventListener('dragstart',  (e) => {
+    const itemRight = this.shadowRoot.querySelector('#itemRight');
+    itemRight.addEventListener('dragstart',  (e) => {
       this.#actionType = 'resizing';
       this.#actionDirection = 'right';
 
@@ -94,13 +92,13 @@ export default class Event extends HTMLElement {
       }, bubbles: true, composed: true}))
     });
 
-    goalRight.addEventListener('dragenter', (e) => {
+    itemRight.addEventListener('dragenter', (e) => {
       e.preventDefault();
     });
-    goalRight.addEventListener('dragover', (e) => {
+    itemRight.addEventListener('dragover', (e) => {
       e.preventDefault();
     });
-    goalRight.addEventListener('dragend',  () => {
+    itemRight.addEventListener('dragend',  () => {
       this.#actionType = '';
 
       this.dispatchEvent(new CustomEvent('resizeEnd', {detail: {
@@ -114,8 +112,8 @@ export default class Event extends HTMLElement {
     | Left Resizing dragging setup
     |
     \* ------------------------------------- */
-    const goalLeft = this.shadowRoot.querySelector('#goalLeft');
-    goalLeft.addEventListener('dragstart',  (e) => {
+    const itemLeft = this.shadowRoot.querySelector('#itemLeft');
+    itemLeft.addEventListener('dragstart',  (e) => {
       this.#actionType = 'resizing';
       this.#actionDirection = 'left';
 
@@ -129,17 +127,17 @@ export default class Event extends HTMLElement {
         handleIndex: parseInt(e.target.dataset.handleIndex)
       }, bubbles: true, composed: true}));
     });
-    goalLeft.addEventListener('dragend',  () => {
+    itemLeft.addEventListener('dragend',  () => {
       this.#actionType = '';
 
       this.dispatchEvent(new CustomEvent('resizeEnd', {detail: {
         eventId: this.getAttribute('event-id'),
       }, bubbles: true, composed: true}));
     });
-    goalLeft.addEventListener('dragenter', (e) => {
+    itemLeft.addEventListener('dragenter', (e) => {
       e.preventDefault();
     });
-    goalLeft.addEventListener('dragover', (e) => {
+    itemLeft.addEventListener('dragover', (e) => {
       e.preventDefault();
     });
 
@@ -157,20 +155,20 @@ export default class Event extends HTMLElement {
       }
 
         if (this.#actionType === 'resizing' || this.#actionType === '') {
-          const goalHandlersContainer = this.shadowRoot.querySelector('#goal');
-          let diffGoalHandles = parseInt(newValue) - parseInt(oldValue);
+          const itemHandlersContainer = this.shadowRoot.querySelector('#item');
+          let diffItemHandles = parseInt(newValue) - parseInt(oldValue);
 
-          if (diffGoalHandles > 0) {
-            while (diffGoalHandles > 0) {
-              if (goalHandlersContainer.lastElementChild != null) {
-                goalHandlersContainer.removeChild(goalHandlersContainer.lastElementChild);
+          if (diffItemHandles > 0) {
+            while (diffItemHandles > 0) {
+              if (itemHandlersContainer.lastElementChild != null) {
+                itemHandlersContainer.removeChild(itemHandlersContainer.lastElementChild);
               }
-              diffGoalHandles--;
+              diffItemHandles--;
             }
           } else {
-            while (diffGoalHandles < 0) {
-              this.#addDragNodeAtIndex(goalHandlersContainer.childElementCount + 1);
-              diffGoalHandles++;
+            while (diffItemHandles < 0) {
+              this.#addDragNodeAtIndex(itemHandlersContainer.childElementCount + 1);
+              diffItemHandles++;
             }
           }
         }
@@ -186,20 +184,20 @@ export default class Event extends HTMLElement {
       }
 
         if (this.#actionType === 'resizing' || this.#actionType === '') {
-          const goalHandlersContainer = this.shadowRoot.querySelector('#goal');
-          let diffGoalHandles = parseInt(newValue) - parseInt(oldValue);
+          const itemHandlersContainer = this.shadowRoot.querySelector('#item');
+          let diffItemHandles = parseInt(newValue) - parseInt(oldValue);
 
-          if (diffGoalHandles < 0) {
-            while (diffGoalHandles < 0) {
-              if (goalHandlersContainer.lastElementChild != null) {
-                goalHandlersContainer.removeChild(goalHandlersContainer.lastElementChild);
+          if (diffItemHandles < 0) {
+            while (diffItemHandles < 0) {
+              if (itemHandlersContainer.lastElementChild != null) {
+                itemHandlersContainer.removeChild(itemHandlersContainer.lastElementChild);
               }
-              diffGoalHandles++;
+              diffItemHandles++;
             }
           } else {
-            while (diffGoalHandles > 0) {
-              this.#addDragNodeAtIndex(goalHandlersContainer.childElementCount + 1);
-              diffGoalHandles--;
+            while (diffItemHandles > 0) {
+              this.#addDragNodeAtIndex(itemHandlersContainer.childElementCount + 1);
+              diffItemHandles--;
             }
           }
         }
@@ -285,21 +283,23 @@ export default class Event extends HTMLElement {
       e.preventDefault();
     });
 
-    this.shadowRoot.querySelector('#goal').appendChild(dragNode);
+    this.shadowRoot.querySelector('#item').appendChild(dragNode);
   }
 
 
   #positionIcon() {
-    const goalIconNode = this.querySelector('a[slot="goalIcon"]');
+    const itemIconNode = this.querySelector('a[slot="itemIcon"]');
+    if (itemIconNode === null) return;
+    itemIconNode.setAttribute('draggable', false);
 
 
     const third = Math.floor((this.end - this.start) / 3 + 1);
     if(third === 1) {
-      goalIconNode.classList.add('widthOne');
+      itemIconNode.classList.add('widthOne');
     } else {
-      goalIconNode.classList.remove('widthOne');
+      itemIconNode.classList.remove('widthOne');
     }
-    goalIconNode.style.setProperty('grid-column', third);
+    itemIconNode.style.setProperty('grid-column', third);
   }
 
 

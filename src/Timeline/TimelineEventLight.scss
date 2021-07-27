@@ -25,4 +25,11 @@ ata-timeline-event {
   a.widthOne img {
     position: absolute;
   }
+
+  a.widthOne {
+    &:after {
+      margin: 2em 1em 0 0.7em;
+      position: absolute;
+    }
+  }
 }

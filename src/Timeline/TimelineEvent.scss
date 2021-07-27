@@ -1,13 +1,13 @@
 :host {
-  $goalHeight: 2em;
+  $itemHeight: 2em;
   --length: 1;
 
   display: grid;
   grid-template-columns: repeat(var(--length), 1fr);
-  grid-template-rows: $goalHeight $goalHeight;
+  grid-template-rows: $itemHeight $itemHeight;
   grid-row-gap: 1em;
 
-  #goal {
+  #item {
     display: contents;
 
     .dragHandler {
@@ -19,7 +19,7 @@
     }
   }
 
-  #goalStrip {
+  #itemStrip {
     grid-column-start: 1;
     grid-column-end: calc(var(--length) + 1);
     grid-row: 2;
@@ -27,21 +27,21 @@
     background-color: cornflowerblue;
   }
 
-  #goalLeft {
+  #itemLeft {
     grid-column: 1;
 
     width: 0.2em;
   }
 
-  #goalRight {
+  #itemRight {
     grid-column: calc(var(--length));
     justify-self: right;
 
     width: 0.2em;
   }
 
-  #goalLeft,
-  #goalRight {
+  #itemLeft,
+  #itemRight {
     grid-row: 2/3;
     z-index: 102;
     cursor: col-resize;
@@ -49,7 +49,7 @@
     background-color: red;
   }
 
-  slot[name="goalIcon"] {
+  slot[name="itemIcon"] {
     grid-row: 1/2;
   }
 }

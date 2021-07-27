@@ -19,16 +19,16 @@ const TimelineTemplate = (args) => {
       age="${args.age}"
   >`;
 
-  for (const event of args.events ?? []) {
+  for (const item of args.events ?? []) {
     innerHtml += `
         <ata-timeline-event 
-            event-id="${event.event_id}" 
-            start="${event.start}" end="${event.end}" icon=""
-            handleIndex="${event.handleIndex}"
+            event-id="${item.item_id}" 
+            start="${item.start}" end="${item.end}" icon=""
+            handleIndex="${item.handleIndex}"
             slot="events">
             
-            <a href="/" slot="goalIcon">
-                <img src="${event.icon}" alt="${event.event_name}" />
+            <a href="/" slot="itemIcon">
+                <img src="${item.icon}" alt="${item.item_name}" />
             </a>
             
         </ata-timeline-event>`;
@@ -65,15 +65,15 @@ TimelineWithEvent.args = {
     {
       start: 2025,
       end: 2033,
-      event_id: "sample_1",
-      event_name: "sample 1",
+      item_id: "sample_1",
+      item_name: "sample 1",
       icon: event_1_Icon
     },
     {
       start: 2035,
       end: 2041,
-      event_id: "sample_2",
-      event_name: "sample 2",
+      item_id: "sample_2",
+      item_name: "sample 2",
       icon: event_1_Icon
     },
   ],
