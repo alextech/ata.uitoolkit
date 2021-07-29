@@ -19,12 +19,14 @@ const TimelineTemplate = (args) => {
       age="${args.age}"
   >`;
 
+  let i = 1;
   for (const item of args.items ?? []) {
     innerHtml += `
         <ata-timeline-item 
             item-id="${item.item_id}" 
             start="${item.start}" end="${item.end}" icon=""
             handleIndex="${item.handleIndex}"
+            row="${i}"
             slot="items">
             
             <a href="/" slot="itemIcon">
@@ -32,6 +34,7 @@ const TimelineTemplate = (args) => {
             </a>
             
         </ata-timeline-item>`;
+    i++;
   }
 
   innerHtml += '</ata-timeline>';
@@ -69,9 +72,34 @@ TimelineWithItem.args = {
       item_name: "sample 1",
       icon: item_1_Icon
     },
+    // {
+    //   start: 2035,
+    //   end: 2041,
+    //   item_id: "sample_2",
+    //   item_name: "sample 2",
+    //   icon: item_1_Icon
+    // },
+  ],
+
+};
+
+export const OverlappingItems = TimelineTemplate.bind({});
+OverlappingItems.args = {
+  years: 35,
+  age: 34,
+  startingYear: 2021,
+
+  items: [
     {
-      start: 2035,
-      end: 2041,
+      start: 2025,
+      end: 2033,
+      item_id: "sample_1",
+      item_name: "sample 1",
+      icon: item_1_Icon
+    },
+    {
+      start: 2028,
+      end: 2034,
       item_id: "sample_2",
       item_name: "sample 2",
       icon: item_1_Icon

@@ -5,9 +5,9 @@ import style from './Timeline.scss';
 const timelineTpl = document.createElement('template');
 timelineTpl.innerHTML =
 `
-<div class="period" style="grid-row: 1/5;"></div>
-<div class="age" style="grid-row: 5/6"></div>
-<div class="year" style="grid-row: 6/7;"></div>
+<div class="period"></div>
+<div class="age"></div>
+<div class="year"></div>
 `;
 
 export default class Timeline extends HTMLElement {
@@ -70,6 +70,10 @@ export default class Timeline extends HTMLElement {
   }
 
   #setupGrid(years) {
+    const numRows = this.childElementCount > 0 ? this.childElementCount : 1;
+
+    this.shadowRoot.host.style.setProperty('--rows', numRows);
+
     this.shadowRoot.host.style.setProperty('--years', years);
 
     const tmpFragment = document.createDocumentFragment();
@@ -84,6 +88,12 @@ export default class Timeline extends HTMLElement {
       period.style.setProperty('grid-column', `${i} / ${++i}`);
     }
 
+    i = 1;
+    const yearNodes = tmpFragment.querySelectorAll('.year');
+    for (const yearNode of yearNodes) {
+      yearNode.style.setProperty('grid-column', `${i} / ${++i}`);
+    }
+
     let currentYear = this.startingYear;
     for (let i = 1; i <= years; i++) {
       const column = i;
@@ -91,7 +101,7 @@ export default class Timeline extends HTMLElement {
       dropTarget.className = 'dropTarget';
       dropTarget.className = 'dropTarget';
       dropTarget.style.setProperty('grid-column', `${column}`);
-      dropTarget.style.setProperty('grid-row', '1 / 5');
+      dropTarget.style.setProperty('grid-row', '1 / '+(numRows+2));
       dropTarget.draggable = true;
       dropTarget.dataset.column = column+'';
       dropTarget.dataset.year = (currentYear++)+'';
@@ -101,7 +111,8 @@ export default class Timeline extends HTMLElement {
         this.#newItemPlaceholder = document.createElement('div');
         this.#newItemPlaceholder.classList.add('newItemPlaceholder');
 
-        this.#newItemPlaceholder.style.setProperty('grid-row', '4');
+        const row = this.childElementCount > 0 ? this.childElementCount : 1;
+        this.#newItemPlaceholder.style.setProperty('grid-row', row);
         this.#newItemPlaceholder.style.setProperty('grid-column-start', e.target.dataset.column);
         this.#newItemPlaceholder.style.setProperty('grid-column-end', parseInt(e.target.dataset.column) + 1 + '');
         this.#newItemPlaceholder.dataset.dragStart = e.target.dataset.column;
@@ -209,6 +220,8 @@ export default class Timeline extends HTMLElement {
     let currentAge = age;
     let i = 0;
     for (const ageNode of ageNodes) {
+      ageNode.style.setProperty('grid-column', i+1);
+
       if (i % 2 === 0) {
         ageNode.innerText = currentAge;
       } else {
@@ -241,7 +254,8 @@ export default class Timeline extends HTMLElement {
       const startColumn = parseInt(item.getAttribute('start')) - this.startingYear + 1;
       const endColumn = parseInt(item.getAttribute('end')) - this.startingYear + 2;
       item.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
-      item.style.setProperty('grid-row', '3 / 5');
+      const startRow = parseInt(item.getAttribute('row'));
+      item.style.setProperty('grid-row', `${startRow} / ${startRow + 1}`);
       item.style.setProperty('z-index', 101);
 
       const itemId = item.getAttribute('item-id');
