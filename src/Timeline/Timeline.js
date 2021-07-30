@@ -248,8 +248,14 @@ export default class Timeline extends HTMLElement {
   #renderItems() {
     const items = this.getElementsByTagName('ata-timeline-item');
 
+    let row = 1;
+
     for (const item of items) {
       item.setAttribute('slot', 'items');
+      // TODO ===== until intersection placement is done
+      item.setAttribute('row', row+'');
+      row++;
+      // =======================
 
       const startColumn = parseInt(item.getAttribute('start')) - this.startingYear + 1;
       const endColumn = parseInt(item.getAttribute('end')) - this.startingYear + 2;
