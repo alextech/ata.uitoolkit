@@ -247,6 +247,7 @@ export default class Timeline extends HTMLElement {
   #processedItems = [];
   #renderItems() {
     const items = this.getElementsByTagName('ata-timeline-item');
+    this.shadowRoot.host.style.setProperty('--rows', items.length);
 
     let row = 1;
 
