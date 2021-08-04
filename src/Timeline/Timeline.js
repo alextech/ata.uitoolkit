@@ -180,7 +180,7 @@ export default class Timeline extends HTMLElement {
       dropTarget.addEventListener('click', (e) => {
         this.dispatchEvent(new CustomEvent('NewItemRequest', {detail: {
             start: e.target.dataset.year,
-            end: this.#currentTargetYear,
+            end: e.target.dataset.year,
           }}));
       });
 
