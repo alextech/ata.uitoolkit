@@ -177,6 +177,12 @@ export default class Timeline extends HTMLElement {
         }
       });
 
+      dropTarget.addEventListener('click', (e) => {
+        this.dispatchEvent(new CustomEvent('NewItemRequest', {detail: {
+            start: e.target.dataset.year,
+            end: this.#currentTargetYear,
+          }}));
+      });
 
 
       /* ------------------------------------- *\
@@ -247,7 +253,7 @@ export default class Timeline extends HTMLElement {
   #processedItems = [];
   #renderItems() {
     const items = this.getElementsByTagName('ata-timeline-item');
-    this.shadowRoot.host.style.setProperty('--rows', items.length);
+    this.shadowRoot.host.style.setProperty('--rows', items.length > 0 ? items.length : 1);
 
     let row = 1;
 
