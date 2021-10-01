@@ -303,7 +303,6 @@ export default class Timeline extends HTMLElement {
       const endColumn = parseInt(item.getAttribute('end')) - this.startingYear + 2;
       item.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
       item.style.setProperty('grid-row', `${startRow} / ${startRow + 1}`);
-      item.style.setProperty('z-index', 101);
 
       if (!this.#newItemDragState.isDraggingNewItem)
       {
