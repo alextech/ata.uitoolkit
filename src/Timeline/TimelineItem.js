@@ -146,6 +146,9 @@ export default class Event extends HTMLElement {
 
   attributeChangedCallback(attribute, oldValue, newValue) {
     if (oldValue === newValue) return;
+    oldValue = parseInt(oldValue);
+    newValue = parseInt(newValue);
+
 
 
     switch (attribute) {
@@ -155,7 +158,7 @@ export default class Event extends HTMLElement {
         console.log('start:', newValue, 'end:', this.end);
 
       {
-        const length = this.end - parseInt(newValue) + 1;
+        const length = this.end - newValue + 1;
         this.shadowRoot.host.style.setProperty('--length', length);
       }
 
@@ -185,6 +188,7 @@ export default class Event extends HTMLElement {
         break;
       case 'end':
         console.log('start:', newValue, 'end:', this.end);
+        const length = newValue - this.start + 1;
 
       {
         const length = parseInt(newValue) - this.start + 1;

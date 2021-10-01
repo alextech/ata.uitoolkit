@@ -79,7 +79,6 @@ export default class Timeline extends HTMLElement {
     const numRows = this.childElementCount > 0 ? this.childElementCount : 1;
 
     this.shadowRoot.host.style.setProperty('--rows', numRows);
-
     this.shadowRoot.host.style.setProperty('--years', years);
 
     const tmpFragment = document.createDocumentFragment();
@@ -105,26 +104,11 @@ export default class Timeline extends HTMLElement {
       const column = i;
       const dropTarget = document.createElement('div');
       dropTarget.className = 'dropTarget';
-      dropTarget.className = 'dropTarget';
       dropTarget.style.setProperty('grid-column', `${column}`);
       dropTarget.style.setProperty('grid-row', '1 / '+(numRows+2));
       dropTarget.draggable = true;
       dropTarget.dataset.column = column+'';
       dropTarget.dataset.year = (currentYear++)+'';
-
-      // dropTarget.addEventListener('dragstart', (e) => {
-      //   this.#dragNewItemStart = e.target.dataset.year;
-      //   this.#newItemPlaceholder = document.createElement('div');
-      //   this.#newItemPlaceholder.classList.add('newItemPlaceholder');
-      //
-      //   const row = this.childElementCount > 0 ? this.childElementCount : 1;
-      //   this.#newItemPlaceholder.style.setProperty('grid-row', row);
-      //   this.#newItemPlaceholder.style.setProperty('grid-column-start', e.target.dataset.column);
-      //   this.#newItemPlaceholder.style.setProperty('grid-column-end', parseInt(e.target.dataset.column) + 1 + '');
-      //   this.#newItemPlaceholder.dataset.dragStart = e.target.dataset.column;
-      //
-      //   this.shadowRoot.appendChild(this.#newItemPlaceholder);
-      // });
 
       dropTarget.addEventListener('dragstart', (e) => {
         console.group("new placeholder");
@@ -147,15 +131,15 @@ export default class Timeline extends HTMLElement {
 
         if (this.#newItemDragState.isDraggingNewItem) {
           this.dispatchEvent(new CustomEvent('NewItemRequest', {detail: {
-              start: parseInt(this.#newItemDragState.newItemPlaceholder.start),
-              end: parseInt(this.#newItemDragState.newItemPlaceholder.end),
+              start: this.#newItemDragState.newItemPlaceholder.start,
+              end: this.#newItemDragState.newItemPlaceholder.end
             }}));
         }
 
         this.#newItemDragState.isDraggingNewItem = false;
+        this.#newItemDragState.newItemPlaceholder.style.setProperty('z-index', 101);
         this.#newItemDragState.newItemPlaceholder = null;
         this.#currentTargetYear = -1;
-        // this.removeChild(this.#newItemPlaceholder);
       });
 
       dropTarget.addEventListener('dragenter', (e) => {
@@ -294,7 +278,12 @@ export default class Timeline extends HTMLElement {
 
     const rows = this.#assignRows();
 
-    this.shadowRoot.host.style.setProperty('--rows', (rows.length > 0 ? rows.length : 1) + 1);
+    const numRows = (rows.length > 0 ? rows.length : 1);
+    this.shadowRoot.host.style.setProperty('--rows', numRows);
+    this.shadowRoot.querySelectorAll('.dropTarget').forEach((dropTarget) => {
+      dropTarget.style.setProperty('grid-row-end', numRows + 1);
+    });
+
 
     for (const item of items) {
       item.setAttribute('slot', 'items');
@@ -315,6 +304,11 @@ export default class Timeline extends HTMLElement {
       item.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
       item.style.setProperty('grid-row', `${startRow} / ${startRow + 1}`);
       item.style.setProperty('z-index', 101);
+
+      if (!this.#newItemDragState.isDraggingNewItem)
+      {
+        item.style.setProperty('z-index', 101);
+      }
 
     }
   }
@@ -393,13 +387,15 @@ export default class Timeline extends HTMLElement {
       const newStartCol = e.detail.start - this.startingYear + 1;
       e.target.style.setProperty('grid-column-start', newStartCol);
 
-      this.#assignRows();
+      this.#renderItems();
     });
 
     this.addEventListener('endchanged', (e) => {
       // offset extra + 1 for CSS grid column end
       const newStartCol = e.detail.end - this.startingYear + 2;
       e.target.style.setProperty('grid-column-end', newStartCol);
+
+      this.#renderItems();
     });
 
     this.addEventListener('moveEnter', (e) => {
@@ -467,13 +463,20 @@ export default class Timeline extends HTMLElement {
 
         if (!hasIntersection) {
           row.push(itemRange);
+          break;
         }
       }
     }
 
-    console.log(rows);
+    Timeline.#consoleLogRows(rows)
 
     return rows;
+  }
+
+  static #consoleLogRows(rows) {
+    for (const row of rows) {
+      console.table(row);
+    }
   }
 
   static #intersects(range_1, range_2) {

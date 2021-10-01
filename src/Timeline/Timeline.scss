@@ -56,7 +56,11 @@
   }
 
   .dropTarget {
-    opacity: 0;
+    //opacity: 0;
+
+    opacity: 0.5;
+    background-color: blue;
+
     z-index: 100;
 
     cursor: cell;
