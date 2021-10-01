@@ -37,6 +37,7 @@ export default class Timeline extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = [style];
   }
 
+  // noinspection JSUnusedGlobalSymbols
   connectedCallback() {
     this.draggable = false;
     const contentObserver = new MutationObserver((mutationsList) => {
@@ -237,6 +238,7 @@ export default class Timeline extends HTMLElement {
       this.#previousYears = years;
     }
 
+    // noinspection JSUnresolvedFunction
     this.shadowRoot.replaceChildren(tmpFragment);
 
 
@@ -290,7 +292,7 @@ export default class Timeline extends HTMLElement {
     for (const item of items) {
       item.setAttribute('slot', 'items');
 
-      let startRow;
+      let startRow = 0;
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         for (const range of row) {
