@@ -2,6 +2,8 @@
 
 import style from './Timeline.scss';
 
+const ROW_OFFSET = 2;
+
 const timelineTpl = document.createElement('template');
 timelineTpl.innerHTML =
 `
@@ -197,8 +199,8 @@ export default class Timeline extends HTMLElement {
         const start = parseInt(e.target.dataset.year), end = start;
 
         const newPlaceholder = document.createElement('ata-timeline-item');
-        newPlaceholder.setAttribute('start', start);
-        newPlaceholder.setAttribute('end', start);
+        newPlaceholder.setAttribute('start', start+'');
+        newPlaceholder.setAttribute('end', start+'');
         this.appendChild(newPlaceholder)
 
         this.dispatchEvent(new CustomEvent('NewItemRequest', {detail: {
@@ -281,7 +283,7 @@ export default class Timeline extends HTMLElement {
     const numRows = (rows.length > 0 ? rows.length : 1);
     this.shadowRoot.host.style.setProperty('--rows', numRows);
     this.shadowRoot.querySelectorAll('.dropTarget').forEach((dropTarget) => {
-      dropTarget.style.setProperty('grid-row-end', numRows + 1);
+      dropTarget.style.setProperty('grid-row-end', numRows + ROW_OFFSET);
     });
 
 
@@ -294,7 +296,7 @@ export default class Timeline extends HTMLElement {
         for (const range of row) {
           if (range.itemId === item.getAttribute('item-id')) {
             item.setAttribute('row', i+1+'');
-            startRow = i+1;
+            startRow = i+ROW_OFFSET;
           }
         }
       }
