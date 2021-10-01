@@ -146,11 +146,19 @@ export default class Event extends HTMLElement {
 
   attributeChangedCallback(attribute, oldValue, newValue) {
     if (oldValue === newValue) return;
+    oldValue = parseInt(oldValue);
+    newValue = parseInt(newValue);
+
 
 
     switch (attribute) {
-      case 'start': {
-        const length = this.end - parseInt(newValue) + 1;
+      case 'start':
+        if (isNaN(this.end)) break;
+
+        console.log('start:', newValue, 'end:', this.end);
+
+      {
+        const length = this.end - newValue + 1;
         this.shadowRoot.host.style.setProperty('--length', length);
       }
 
@@ -178,7 +186,11 @@ export default class Event extends HTMLElement {
         this.dispatchEvent(new CustomEvent("startchanged", {detail: {start: newValue}, bubbles: true, composed: true}));
 
         break;
-      case 'end': {
+      case 'end':
+        console.log('start:', newValue, 'end:', this.end);
+        const length = newValue - this.start + 1;
+
+      {
         const length = parseInt(newValue) - this.start + 1;
         this.shadowRoot.host.style.setProperty('--length', length);
       }
@@ -223,6 +235,9 @@ export default class Event extends HTMLElement {
     |
     \* ------------------------------------- */
     dragNode.addEventListener('dragstart', (e) => {
+      console.group("timeline moving");
+      console.info("timeline node dragstart");
+
       this.#actionType = 'moving';
 
       e.dataTransfer.effectAllowed = 'move';
@@ -238,6 +253,9 @@ export default class Event extends HTMLElement {
     });
 
     dragNode.addEventListener('dragend', () => {
+      console.info("timeline node dragend");
+      console.groupEnd();
+
       this.dispatchEvent(new CustomEvent('moveEnd', {bubbles: true, composed: true}));
 
       this.#actionType = '';

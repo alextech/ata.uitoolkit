@@ -17,6 +17,9 @@ module.exports = {
             type: "umd"
         },
     },
+    optimization: {
+        minimize: false
+    },
     module: {
         rules: [
             {

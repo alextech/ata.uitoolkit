@@ -26,7 +26,6 @@ const TimelineTemplate = (args) => {
             item-id="${item.item_id}" 
             start="${item.start}" end="${item.end}" icon=""
             handleIndex="${item.handleIndex}"
-            row="${i}"
             slot="items">
             
             <a href="/" slot="itemIcon">
