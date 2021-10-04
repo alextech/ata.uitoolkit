@@ -164,7 +164,7 @@ export default class Event extends HTMLElement {
 
         if (this.#actionType === 'resizing' || this.#actionType === '') {
           const itemHandlersContainer = this.shadowRoot.querySelector('#item');
-          let diffItemHandles = parseInt(newValue) - parseInt(oldValue);
+          let diffItemHandles = newValue - oldValue;
 
           if (diffItemHandles > 0) {
             while (diffItemHandles > 0) {
@@ -189,15 +189,11 @@ export default class Event extends HTMLElement {
       case 'end':
         console.log('start:', newValue, 'end:', this.end);
         const length = newValue - this.start + 1;
-
-      {
-        const length = parseInt(newValue) - this.start + 1;
         this.shadowRoot.host.style.setProperty('--length', length);
-      }
 
         if (this.#actionType === 'resizing' || this.#actionType === '') {
           const itemHandlersContainer = this.shadowRoot.querySelector('#item');
-          let diffItemHandles = parseInt(newValue) - parseInt(oldValue);
+          let diffItemHandles = newValue - oldValue;
 
           if (diffItemHandles < 0) {
             while (diffItemHandles < 0) {
