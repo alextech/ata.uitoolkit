@@ -12,6 +12,10 @@ timelineTpl.innerHTML =
 <div class="year"></div>
 `;
 
+function generateId() {
+  return 'placeholder_'+(Math.random()*100);
+}
+
 export default class Timeline extends HTMLElement {
   static get observedAttributes() {
     return ['years', 'startingyear', 'age'];
@@ -41,12 +45,16 @@ export default class Timeline extends HTMLElement {
   connectedCallback() {
     this.draggable = false;
     const contentObserver = new MutationObserver((mutationsList) => {
+      console.groupCollapsed("timeline_mutation")
+
       for (const mutationRecord of mutationsList) {
         if (mutationRecord.addedNodes.length > 0) {
           console.log("mutation => render Items")
           this.#renderItems();
         }
       }
+
+      console.groupEnd()
     });
     contentObserver.observe(this, {childList: true});
 
@@ -121,7 +129,7 @@ export default class Timeline extends HTMLElement {
         this.#newItemDragState.newItemOrigin = parseInt(e.target.dataset.year);
         this.#newItemDragState.newItemPlaceholder = document.createElement('ata-timeline-item');
         console.log("dragstart year:", e.target.dataset.year);
-        this.#newItemDragState.newItemPlaceholder.setAttribute('item-id', 'placeholder_'+(Math.random()*100));
+        this.#newItemDragState.newItemPlaceholder.setAttribute('item-id', generateId());
         this.#newItemDragState.newItemPlaceholder.setAttribute('start', e.target.dataset.year);
         this.#newItemDragState.newItemPlaceholder.setAttribute('end', parseInt(e.target.dataset.year) + 1);
 
@@ -134,6 +142,7 @@ export default class Timeline extends HTMLElement {
 
         if (this.#newItemDragState.isDraggingNewItem) {
           this.dispatchEvent(new CustomEvent('NewItemRequest', {detail: {
+              id: this.#newItemDragState.newItemPlaceholder.getAttribute('item-id'),
               start: this.#newItemDragState.newItemPlaceholder.start,
               end: this.#newItemDragState.newItemPlaceholder.end
             }}));
@@ -200,6 +209,7 @@ export default class Timeline extends HTMLElement {
         const start = parseInt(e.target.dataset.year), end = start;
 
         const newPlaceholder = document.createElement('ata-timeline-item');
+        newPlaceholder.setAttribute('item-id', generateId());
         newPlaceholder.setAttribute('start', start+'');
         newPlaceholder.setAttribute('end', start+'');
         this.appendChild(newPlaceholder)
@@ -207,6 +217,7 @@ export default class Timeline extends HTMLElement {
         this.dispatchEvent(new CustomEvent('NewItemRequest', {detail: {
             start: start,
             end: end,
+            id: newPlaceholder.getAttribute('item-id')
           }}));
       });
 
@@ -303,8 +314,24 @@ export default class Timeline extends HTMLElement {
         }
       }
 
-      const startColumn = parseInt(item.getAttribute('start')) - this.startingYear + 1;
-      const endColumn = parseInt(item.getAttribute('end')) - this.startingYear + 2;
+      const start = parseInt(item.getAttribute('start'));
+      const end = parseInt(item.getAttribute('end'));
+
+      if (start < this.startingYear || end > this.#maxYear)
+      {
+        console.error(
+            `Item ${item.getAttribute('item-id')} start or end is outside of the range of timeline.`,
+            `item range: ${start} - ${end}`,
+            `timeline range: ${this.startingYear} - ${this.#maxYear}`
+        )
+      }
+
+      let startColumn = start - this.startingYear + 1;
+      let endColumn = end - this.startingYear + 2;
+
+      startColumn = startColumn > 0 ? startColumn : 1;
+      endColumn = endColumn > 0 ? endColumn : 1;
+
       item.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
       item.style.setProperty('grid-row', `${startRow} / ${startRow + 1}`);
 
@@ -318,10 +345,10 @@ export default class Timeline extends HTMLElement {
 
   #setupListeners() {
     /* ------------------------------------- *\
-      |
-      | Event dispatch setup
-      |
-      \* ------------------------------------- */
+    |
+    | Event dispatch setup
+    |
+    \* ------------------------------------- */
     this.addEventListener('moveStart', (e) => {
       this.#dragChildEvent = e;
     });
