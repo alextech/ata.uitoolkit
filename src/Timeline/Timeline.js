@@ -154,55 +154,7 @@ export default class Timeline extends HTMLElement {
         this.#currentTargetYear = -1;
       });
 
-      dropTarget.addEventListener('dragenter', (e) => {
-        console.info('entering node on main grid')
-
-        this.#currentTargetYear = parseInt(e.target.dataset.year);
-
-        if (this.#dragChildEvent != null) {
-          this.#updateItemBoundaries(parseInt(e.target.dataset.column));
-        }
-
-        if (this.#resizeChildEvent != null) {
-          switch (this.#resizeChildEvent.detail.direction) {
-            case 'right':
-              if(e.target.dataset.year >= this.#resizeChildEvent.target.start)
-              {
-                this.#resizeChildEvent.target.setAttribute('end', this.#currentTargetYear);
-              }
-
-              break;
-            case 'left':
-              if(e.target.dataset.year <= this.#resizeChildEvent.target.end)
-              {
-                this.#resizeChildEvent.target.setAttribute('start', this.#currentTargetYear);
-              }
-
-              break;
-          }
-        }
-
-        const dragState = this.#newItemDragState;
-
-        if (dragState.isDraggingNewItem) {
-          let target = parseInt(e.target.dataset.year);
-
-
-          let start, end;
-          if (target > dragState.newItemOrigin) {
-            start = dragState.newItemOrigin;
-            end = target;
-          } else {
-            start = target;
-            end = dragState.newItemOrigin;
-          }
-
-          console.info('setting placeholder range', [start, end]);
-
-          dragState.newItemPlaceholder.setAttribute('start', start);
-          dragState.newItemPlaceholder.setAttribute('end', end);
-        }
-      });
+      dropTarget.addEventListener('dragenter', this.#dragEnterHandler.bind(this));
 
       dropTarget.addEventListener('click', (e) => {
 
@@ -256,6 +208,75 @@ export default class Timeline extends HTMLElement {
     const slot = document.createElement('slot');
     slot.setAttribute('name', 'items');
     this.shadowRoot.appendChild(slot);
+  }
+
+  #timelineItemDragEnterRedispatch(e) {
+    // FIXME this gets hits a lot!
+    const handleIndex = e.detail.handleIndex;
+    const timelineRelativeIndex = parseInt(e.target.dataset.gridColumn) + handleIndex - 2;
+
+    const simulatedEventData = {
+      target: {
+        dataset: {
+          year: timelineRelativeIndex + this.startingYear,
+          column: timelineRelativeIndex
+        },
+      }
+    }
+
+    console.info("dragging new over item", simulatedEventData);
+
+    this.#dragEnterHandler(simulatedEventData);
+  }
+
+  #dragEnterHandler(e) {
+    console.info('entering node on main grid')
+
+    this.#currentTargetYear = parseInt(e.target.dataset.year);
+
+    if (this.#dragChildEvent != null) {
+      this.#updateItemBoundaries(parseInt(e.target.dataset.column));
+    }
+
+    if (this.#resizeChildEvent != null) {
+      switch (this.#resizeChildEvent.detail.direction) {
+        case 'right':
+          if(e.target.dataset.year >= this.#resizeChildEvent.target.start)
+          {
+            this.#resizeChildEvent.target.setAttribute('end', this.#currentTargetYear);
+          }
+
+          break;
+        case 'left':
+          if(e.target.dataset.year <= this.#resizeChildEvent.target.end)
+          {
+            this.#resizeChildEvent.target.setAttribute('start', this.#currentTargetYear);
+          }
+
+          break;
+      }
+    }
+
+    const dragState = this.#newItemDragState;
+
+    if (dragState.isDraggingNewItem) {
+      let target = parseInt(e.target.dataset.year);
+
+
+      let start, end;
+      if (target > dragState.newItemOrigin) {
+        start = dragState.newItemOrigin;
+        end = target;
+      } else {
+        start = target;
+        end = dragState.newItemOrigin;
+      }
+
+      console.info('setting placeholder range', [start, end]);
+
+      dragState.newItemPlaceholder.setAttribute('start', start);
+      dragState.newItemPlaceholder.setAttribute('end', end);
+    }
   }
 
   static #updateAge(age, rootNode) {
@@ -333,6 +354,7 @@ export default class Timeline extends HTMLElement {
       endColumn = endColumn > 0 ? endColumn : 1;
 
       item.style.setProperty('grid-column', `${startColumn} / ${endColumn}`);
+      item.dataset.gridColumn = startColumn+'';
       item.style.setProperty('grid-row', `${startRow} / ${startRow + 1}`);
 
       if (!this.#newItemDragState.isDraggingNewItem)
@@ -340,6 +362,8 @@ export default class Timeline extends HTMLElement {
         item.style.setProperty('z-index', 101);
       }
 
+
+      item.addEventListener('dragEnterExternal', this.#timelineItemDragEnterRedispatch.bind(this));
     }
   }
 

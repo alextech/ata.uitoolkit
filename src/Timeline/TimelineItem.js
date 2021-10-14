@@ -262,6 +262,8 @@ export default class Event extends HTMLElement {
     dragNode.addEventListener('dragenter', (e) => {
       e.preventDefault();
 
+      console.log('item dragenter: ', this.#actionType);
+
       switch (this.#actionType) {
         case 'moving':
           this.dispatchEvent(new CustomEvent('moveEnter', {detail: {
@@ -274,6 +276,19 @@ export default class Event extends HTMLElement {
           const attribute = this.#actionDirection === 'right' ? 'end' : 'start';
           const year = this.start + parseInt(e.target.dataset.handleIndex) - 1;
           this.setAttribute(attribute, year+'');
+
+          break;
+
+        case 'movingThird':
+          // TODO #670 when icon node is dragged
+
+          break;
+        default: // if received while not in a state, it probably came from something else passing over it.
+          this.dispatchEvent(new CustomEvent('dragEnterExternal', {
+            detail: {
+              handleIndex: parseInt(e.target.dataset.handleIndex)
+            }
+          }));
 
           break;
       }
