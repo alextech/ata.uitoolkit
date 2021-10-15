@@ -49,8 +49,11 @@ export default class Timeline extends HTMLElement {
 
       for (const mutationRecord of mutationsList) {
         if (mutationRecord.addedNodes.length > 0) {
-          console.log("mutation => render Items")
           this.#renderItems();
+
+          mutationRecord.addedNodes.forEach((node) => {
+            node.addEventListener('dragEnterExternal', this.#timelineItemDragEnterRedispatch.bind(this));
+          });
         }
       }
 
@@ -211,7 +214,6 @@ export default class Timeline extends HTMLElement {
   }
 
   #timelineItemDragEnterRedispatch(e) {
-    // FIXME this gets hits a lot!
     const handleIndex = e.detail.handleIndex;
     const timelineRelativeIndex = parseInt(e.target.dataset.gridColumn) + handleIndex - 2;
 
@@ -230,7 +232,7 @@ export default class Timeline extends HTMLElement {
   }
 
   #dragEnterHandler(e) {
-    console.info('entering node on main grid')
+    console.groupCollapsed('entering node on main grid')
 
     this.#currentTargetYear = parseInt(e.target.dataset.year);
 
@@ -272,10 +274,12 @@ export default class Timeline extends HTMLElement {
         end = dragState.newItemOrigin;
       }
 
-      console.info('setting placeholder range', [start, end]);
+      console.log('setting placeholder range', [start, end]);
 
       dragState.newItemPlaceholder.setAttribute('start', start);
       dragState.newItemPlaceholder.setAttribute('end', end);
+
+      console.groupEnd();
     }
   }
 
@@ -361,9 +365,6 @@ export default class Timeline extends HTMLElement {
       {
         item.style.setProperty('z-index', 101);
       }
-
-
-      item.addEventListener('dragEnterExternal', this.#timelineItemDragEnterRedispatch.bind(this));
     }
   }
 
@@ -461,6 +462,18 @@ export default class Timeline extends HTMLElement {
     });
     /*
     | -------------------------------------------- */
+
+
+    /* ------------------------------------- *\
+    |
+    | Coordinate updating section
+    |
+    \* ------------------------------------- */
+
+    const itemNodes = this.getElementsByTagName('ata-timeline-item');
+    for (const itemNode of itemNodes) {
+      itemNode.addEventListener('dragEnterExternal', this.#timelineItemDragEnterRedispatch.bind(this));
+    }
   }
 
   #updateItemBoundaries(targetColumn) {
