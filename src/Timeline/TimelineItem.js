@@ -31,6 +31,8 @@ export default class Event extends HTMLElement {
   #actionDirection;
   #rightDragNode;
 
+  #iconTargetIndex;
+
   constructor() {
     super();
 
@@ -141,7 +143,8 @@ export default class Event extends HTMLElement {
       e.preventDefault();
     });
 
-
+    const itemIconNode = this.querySelector('a[slot="itemIcon"]');
+    this.#iconNodeDragEvents(itemIconNode)
   }
 
   attributeChangedCallback(attribute, oldValue, newValue) {
@@ -279,8 +282,11 @@ export default class Event extends HTMLElement {
 
           break;
 
-        case 'movingThird':
-          // TODO #670 when icon node is dragged
+        case 'movingIcon':
+          const itemIconNode = this.querySelector('a[slot="itemIcon"]');
+          const column = e.target.dataset.handleIndex;
+          itemIconNode.style.setProperty('grid-column', column);
+          this.#iconTargetIndex = column;
 
           break;
         default: // if received while not in a state, it probably came from something else passing over it.
@@ -319,7 +325,7 @@ export default class Event extends HTMLElement {
   #positionIcon() {
     const itemIconNode = this.querySelector('a[slot="itemIcon"]');
     if (itemIconNode === null) return;
-    itemIconNode.setAttribute('draggable', false);
+    // itemIconNode.setAttribute('draggable', true);
     itemIconNode.querySelector('img').setAttribute('draggable', false);
 
 
@@ -330,6 +336,23 @@ export default class Event extends HTMLElement {
       itemIconNode.classList.remove('widthOne');
     }
     itemIconNode.style.setProperty('grid-column', third);
+  }
+
+  #iconNodeDragEvents(iconNode) {
+    iconNode.addEventListener('dragstart', (e) => {
+      this.#actionType = 'movingIcon';
+    });
+
+    iconNode.addEventListener('dragend', (e) => {
+      this.#actionType = undefined;
+      this.dispatchEvent(new CustomEvent('iconMoved', {bubbles: true, composed: true}));
+      this.dispatchEvent(new CustomEvent('ItemChanged', {detail:{
+          thirdOfTotal: this.#iconTargetIndex,
+        }, bubbles: true, composed: true}
+      ));
+
+      this.#iconTargetIndex = undefined;
+    });
   }
 
 
