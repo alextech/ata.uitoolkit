@@ -17,9 +17,11 @@ eventTpl.innerHTML = `
   <div id="itemStrip">&nbsp;</div>
 `;
 
+const __DEFAULT_MARKER_POSITION__ = 3;
+
 export default class Event extends HTMLElement {
   static get observedAttributes() {
-    return ['start', 'end'];
+    return ['start', 'end', 'markeryear'];
   }
 
   #moveIndex = -1;
@@ -54,6 +56,7 @@ export default class Event extends HTMLElement {
             const addedNode = mutationRecord.addedNodes[i];
             if (!(addedNode instanceof Element) || addedNode.getAttribute('slot') !== 'itemIcon') continue;
 
+            this.#iconNodeDragEvents(addedNode);
             this.#positionIcon();
 
             i++;
@@ -151,7 +154,7 @@ export default class Event extends HTMLElement {
     if (oldValue === newValue) return;
     oldValue = parseInt(oldValue);
     newValue = parseInt(newValue);
-
+    if(isNaN(newValue)) return;
 
 
     switch (attribute) {
@@ -190,7 +193,7 @@ export default class Event extends HTMLElement {
 
         break;
       case 'end':
-        console.log('start:', newValue, 'end:', this.end);
+        console.log('start:', this.start, 'end:', newValue);
         const length = newValue - this.start + 1;
         this.shadowRoot.host.style.setProperty('--length', length);
 
@@ -216,6 +219,10 @@ export default class Event extends HTMLElement {
         this.#positionIcon();
 
         this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}, bubbles: true, composed: true}));
+
+        break;
+      case 'markeryear':
+        this.#positionIcon();
 
         break;
     }
@@ -286,7 +293,8 @@ export default class Event extends HTMLElement {
           const itemIconNode = this.querySelector('a[slot="itemIcon"]');
           const column = e.target.dataset.handleIndex;
           itemIconNode.style.setProperty('grid-column', column);
-          this.#iconTargetIndex = column;
+          this.#iconTargetIndex = parseInt(column);
+          this.setAttribute('markerYear', (this.start + this.#iconTargetIndex - 1) + '');
 
           break;
         default: // if received while not in a state, it probably came from something else passing over it.
@@ -325,20 +333,27 @@ export default class Event extends HTMLElement {
   #positionIcon() {
     const itemIconNode = this.querySelector('a[slot="itemIcon"]');
     if (itemIconNode === null) return;
-    // itemIconNode.setAttribute('draggable', true);
     itemIconNode.querySelector('img').setAttribute('draggable', false);
 
+    let iconIndex;
+    const markerYear = this.markerYear;
+    if (markerYear != null && !isNaN(markerYear)) {
+      iconIndex = this.markerYear - this.start + 1;
+    } else {
+      iconIndex = Math.floor((this.end - this.start) / 3 + 1);
+    }
 
-    const third = Math.floor((this.end - this.start) / 3 + 1);
-    if(third === 1) {
+    if(iconIndex === 1) {
       itemIconNode.classList.add('widthOne');
     } else {
       itemIconNode.classList.remove('widthOne');
     }
-    itemIconNode.style.setProperty('grid-column', third);
+    itemIconNode.style.setProperty('grid-column', iconIndex);
   }
 
   #iconNodeDragEvents(iconNode) {
+    if(iconNode == null) return;
+
     iconNode.addEventListener('dragstart', (e) => {
       this.#actionType = 'movingIcon';
     });
@@ -374,6 +389,14 @@ export default class Event extends HTMLElement {
 
   get duration() {
     return this.end - this.start + 1;
+  }
+
+  set markerYear(year) {
+    this.setAttribute('markerYear', year);
+  }
+
+  get markerYear() {
+    return parseInt(this.getAttribute('markerYear'));
   }
 
 }

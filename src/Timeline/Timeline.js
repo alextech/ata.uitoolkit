@@ -278,9 +278,9 @@ export default class Timeline extends HTMLElement {
 
       dragState.newItemPlaceholder.setAttribute('start', start);
       dragState.newItemPlaceholder.setAttribute('end', end);
-
-      console.groupEnd();
     }
+
+    console.groupEnd();
   }
 
   static #updateAge(age, rootNode) {

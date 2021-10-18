@@ -25,7 +25,7 @@ const TimelineTemplate = (args) => {
         <ata-timeline-item 
             item-id="${item.item_id}" 
             start="${item.start}" end="${item.end}" icon=""
-            handleIndex="${item.handleIndex}"
+            markeryear="${item.handleIndex}"
             slot="items">
             
             <a href="/" slot="itemIcon">
