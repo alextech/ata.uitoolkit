@@ -187,7 +187,15 @@ export default class Event extends HTMLElement {
           }
         }
 
-        this.#positionIcon();
+        let markerYear = this.markerYear;
+        if (markerYear != null && !isNaN(markerYear))
+        {
+          this.markerYear = markerYear + (newValue - oldValue);
+          // positionIcon gets called from attribute change handler of markerYear
+          // this.#positionIcon();
+        } else {
+          this.#positionIcon();
+        }
 
         this.dispatchEvent(new CustomEvent("startchanged", {detail: {start: newValue}, bubbles: true, composed: true}));
 
@@ -225,6 +233,26 @@ export default class Event extends HTMLElement {
         this.#positionIcon();
 
         break;
+    }
+  }
+
+  #markerBoundariesCorrection() {
+    let markerYear = this.markerYear;
+    if (!(markerYear != null && !isNaN(markerYear))) return;
+
+    let corrected = false;
+    if (markerYear < this.start) {
+      markerYear = this.start;
+      corrected = true;
+    }
+    if (markerYear > this.end) { // newValue == this.end
+      markerYear = this.end;
+      corrected = true;
+    }
+
+    if(corrected)
+    {
+      this.markerYear = markerYear;
     }
   }
 
@@ -294,7 +322,8 @@ export default class Event extends HTMLElement {
           const column = e.target.dataset.handleIndex;
           itemIconNode.style.setProperty('grid-column', column);
           this.#iconTargetIndex = parseInt(column);
-          this.setAttribute('markerYear', (this.start + this.#iconTargetIndex - 1) + '');
+          // this.setAttribute('markerYear', (this.start + this.#iconTargetIndex - 1) + '');
+          this.markerYear = this.start + this.#iconTargetIndex - 1;
 
           break;
         default: // if received while not in a state, it probably came from something else passing over it.
@@ -333,6 +362,8 @@ export default class Event extends HTMLElement {
   #positionIcon() {
     const itemIconNode = this.querySelector('a[slot="itemIcon"]');
     if (itemIconNode === null) return;
+
+    this.#markerBoundariesCorrection();
     itemIconNode.querySelector('img').setAttribute('draggable', false);
 
     let iconIndex;
@@ -340,7 +371,7 @@ export default class Event extends HTMLElement {
     if (markerYear != null && !isNaN(markerYear)) {
       iconIndex = this.markerYear - this.start + 1;
     } else {
-      iconIndex = Math.floor((this.end - this.start) / 3 + 1);
+      iconIndex = Math.floor((this.end - this.start) / __DEFAULT_MARKER_POSITION__ + 1);
     }
 
     if(iconIndex === 1) {
@@ -359,7 +390,7 @@ export default class Event extends HTMLElement {
     });
 
     iconNode.addEventListener('dragend', (e) => {
-      this.#actionType = undefined;
+      this.#actionType = '';
       this.dispatchEvent(new CustomEvent('iconMoved', {bubbles: true, composed: true}));
       this.dispatchEvent(new CustomEvent('ItemChanged', {detail:{
           thirdOfTotal: this.#iconTargetIndex,
