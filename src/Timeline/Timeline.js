@@ -232,7 +232,7 @@ export default class Timeline extends HTMLElement {
   }
 
   #dragEnterHandler(e) {
-    console.groupCollapsed('entering node on main grid')
+    console.groupCollapsed('entering node on main grid: ', e.target.dataset.column);
 
     this.#currentTargetYear = parseInt(e.target.dataset.year);
 
@@ -243,14 +243,18 @@ export default class Timeline extends HTMLElement {
     if (this.#resizeChildEvent != null) {
       switch (this.#resizeChildEvent.detail.direction) {
         case 'right':
-          if(e.target.dataset.year >= this.#resizeChildEvent.target.start)
+          if(e.target.dataset.year >= this.#resizeChildEvent.target.start
+              && Math.abs(e.target.dataset.year - this.#resizeChildEvent.target.end) === 1
+          )
           {
             this.#resizeChildEvent.target.setAttribute('end', this.#currentTargetYear);
           }
 
           break;
         case 'left':
-          if(e.target.dataset.year <= this.#resizeChildEvent.target.end)
+          if(e.target.dataset.year <= this.#resizeChildEvent.target.end
+              && Math.abs(e.target.dataset.year - this.#resizeChildEvent.target.start) === 1
+          )
           {
             this.#resizeChildEvent.target.setAttribute('start', this.#currentTargetYear);
           }
@@ -318,11 +322,13 @@ export default class Timeline extends HTMLElement {
 
     const rows = this.#assignRows();
 
-    const numRows = (rows.length > 0 ? rows.length : 1);
-    this.shadowRoot.host.style.setProperty('--rows', numRows);
-    this.shadowRoot.querySelectorAll('.dropTarget').forEach((dropTarget) => {
-      dropTarget.style.setProperty('grid-row-end', numRows + ROW_OFFSET);
-    });
+    if (this.#newItemDragState.isDraggingNewItem) {
+      const numRows = (rows.length > 0 ? rows.length : 1);
+      this.shadowRoot.host.style.setProperty('--rows', numRows);
+      this.shadowRoot.querySelectorAll('.dropTarget').forEach((dropTarget) => {
+        dropTarget.style.setProperty('grid-row-end', numRows + ROW_OFFSET);
+      });
+    }
 
 
     for (const item of items) {
@@ -482,7 +488,9 @@ export default class Timeline extends HTMLElement {
 
     const diff = targetColumn - originalColumn;
 
-    if (diff === 0) {
+    if (diff === 0
+        // || Math.abs(diff) > 1
+    ) {
       return;
     }
 
