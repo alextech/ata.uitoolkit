@@ -17,11 +17,11 @@ eventTpl.innerHTML = `
   <div id="itemStrip">&nbsp;</div>
 `;
 
-const __DEFAULT_MARKER_POSITION__ = 3;
+const __DEFAULT_ICON_POSITION__ = 3;
 
 export default class Event extends HTMLElement {
   static get observedAttributes() {
-    return ['start', 'end', 'markeryear'];
+    return ['start', 'end', 'iconyear'];
   }
 
   #moveIndex = -1;
@@ -187,11 +187,11 @@ export default class Event extends HTMLElement {
           }
         }
 
-        let markerYear = this.markerYear;
-        if (markerYear != null && !isNaN(markerYear))
+        let iconYear = this.iconYear;
+        if (iconYear != null && !isNaN(iconYear))
         {
-          this.markerYear = markerYear + (newValue - oldValue);
-          // positionIcon gets called from attribute change handler of markerYear
+          this.iconYear = iconYear + (newValue - oldValue);
+          // positionIcon gets called from attribute change handler of iconYear
           // this.#positionIcon();
         } else {
           this.#positionIcon();
@@ -229,30 +229,30 @@ export default class Event extends HTMLElement {
         this.dispatchEvent(new CustomEvent("endchanged", {detail: {end: newValue}, bubbles: true, composed: true}));
 
         break;
-      case 'markeryear':
+      case 'iconyear':
         this.#positionIcon();
 
         break;
     }
   }
 
-  #markerBoundariesCorrection() {
-    let markerYear = this.markerYear;
-    if (!(markerYear != null && !isNaN(markerYear))) return;
+  #iconBoundariesCorrection() {
+    let iconYear = this.iconYear;
+    if (!(iconYear != null && !isNaN(iconYear))) return;
 
     let corrected = false;
-    if (markerYear < this.start) {
-      markerYear = this.start;
+    if (iconYear < this.start) {
+      iconYear = this.start;
       corrected = true;
     }
-    if (markerYear > this.end) { // newValue == this.end
-      markerYear = this.end;
+    if (iconYear > this.end) { // newValue == this.end
+      iconYear = this.end;
       corrected = true;
     }
 
     if(corrected)
     {
-      this.markerYear = markerYear;
+      this.iconYear = iconYear;
     }
   }
 
@@ -322,8 +322,8 @@ export default class Event extends HTMLElement {
           const column = e.target.dataset.handleIndex;
           itemIconNode.style.setProperty('grid-column', column);
           this.#iconTargetIndex = parseInt(column);
-          // this.setAttribute('markerYear', (this.start + this.#iconTargetIndex - 1) + '');
-          this.markerYear = this.start + this.#iconTargetIndex - 1;
+          // this.setAttribute('iconYear', (this.start + this.#iconTargetIndex - 1) + '');
+          this.iconYear = this.start + this.#iconTargetIndex - 1;
 
           break;
         default: // if received while not in a state, it probably came from something else passing over it.
@@ -363,15 +363,15 @@ export default class Event extends HTMLElement {
     const itemIconNode = this.querySelector('a[slot="itemIcon"]');
     if (itemIconNode === null) return;
 
-    this.#markerBoundariesCorrection();
+    this.#iconBoundariesCorrection();
     itemIconNode.querySelector('img').setAttribute('draggable', false);
 
     let iconIndex;
-    const markerYear = this.markerYear;
-    if (markerYear != null && !isNaN(markerYear)) {
-      iconIndex = this.markerYear - this.start + 1;
+    const iconYear = this.iconYear;
+    if (iconYear != null && !isNaN(iconYear)) {
+      iconIndex = this.iconYear - this.start + 1;
     } else {
-      iconIndex = Math.floor((this.end - this.start) / __DEFAULT_MARKER_POSITION__ + 1);
+      iconIndex = Math.floor((this.end - this.start) / __DEFAULT_ICON_POSITION__ + 1);
     }
 
     if(iconIndex === 1) {
@@ -422,12 +422,12 @@ export default class Event extends HTMLElement {
     return this.end - this.start + 1;
   }
 
-  set markerYear(year) {
-    this.setAttribute('markerYear', year);
+  set iconYear(year) {
+    this.setAttribute('iconYear', year);
   }
 
-  get markerYear() {
-    return parseInt(this.getAttribute('markerYear'));
+  get iconYear() {
+    return parseInt(this.getAttribute('iconYear'));
   }
 
 }
