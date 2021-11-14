@@ -25,7 +25,7 @@ const TimelineTemplate = (args) => {
         <ata-timeline-item 
             item-id="${item.item_id}" 
             start="${item.start}" end="${item.end}" icon=""
-            iconyear="${item.handleIndex}"
+            iconyear="${item.iconYear}"
             slot="items">
             
             <a href="/" slot="itemIcon">
@@ -101,7 +101,8 @@ OverlappingItems.args = {
       end: 2034,
       item_id: "sample_2",
       item_name: "sample 2",
-      icon: item_1_Icon
+      icon: item_1_Icon,
+      iconYear: 2033
     },
   ],
 

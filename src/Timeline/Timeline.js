@@ -386,12 +386,14 @@ export default class Timeline extends HTMLElement {
     this.addEventListener('moveEnd', () => {
       const from = {
         start: this.#dragChildEvent.detail.fromStart,
-        end: this.#dragChildEvent.detail.fromEnd
+        end: this.#dragChildEvent.detail.fromEnd,
+        iconYear: this.#dragChildEvent.detail.iconYear
       };
 
       const to = {
         start: parseInt(this.#dragChildEvent.target.getAttribute('start')),
-        end: parseInt(this.#dragChildEvent.target.getAttribute('end'))
+        end: parseInt(this.#dragChildEvent.target.getAttribute('end')),
+        iconYear: from.iconYear
       }
 
       if (from.start !== to.start || from.end !== to.end) {
@@ -399,7 +401,6 @@ export default class Timeline extends HTMLElement {
             itemId: this.#dragChildEvent.target.getAttribute('item-id'),
             from: from,
             to: to,
-            thirdOfTotal: 1,
           }}));
       }
 
@@ -412,12 +413,14 @@ export default class Timeline extends HTMLElement {
     this.addEventListener('resizeEnd', () => {
       const from = {
         start: this.#resizeChildEvent.detail.fromStart,
-        end: this.#resizeChildEvent.detail.fromEnd
+        end: this.#resizeChildEvent.detail.fromEnd,
+        iconYear: this.#resizeChildEvent.detail.iconYear
       };
 
       const to = {
         start: parseInt(this.#resizeChildEvent.target.getAttribute('start')),
-        end: parseInt(this.#resizeChildEvent.target.getAttribute('end'))
+        end: parseInt(this.#resizeChildEvent.target.getAttribute('end')),
+        iconYear: from.iconYear
       }
 
       if (from.start !== to.start || from.end !== to.end) {
@@ -426,7 +429,6 @@ export default class Timeline extends HTMLElement {
             itemId: this.#resizeChildEvent.target.getAttribute('item-id'),
             from: from,
             to: to,
-            thirdOfTotal: 1,
           }
         }));
       }

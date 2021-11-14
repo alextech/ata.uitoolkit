@@ -33,7 +33,7 @@ export default class Event extends HTMLElement {
   #actionDirection;
   #rightDragNode;
 
-  #iconTargetIndex;
+  #iconInitialYear;
 
   constructor() {
     super();
@@ -45,6 +45,11 @@ export default class Event extends HTMLElement {
   }
 
   connectedCallback() {
+    let iconYear = this.iconYear;
+    if(iconYear == null || isNaN(iconYear)) {
+      this.iconYear = Math.floor((this.end - this.start) / __DEFAULT_ICON_POSITION__) + this.start;
+    }
+
     this.#rightDragNode = this.shadowRoot.querySelector('#itemRight');
 
     const contentObserver = new MutationObserver((mutationsList) => {
@@ -168,9 +173,12 @@ export default class Event extends HTMLElement {
         this.shadowRoot.host.style.setProperty('--length', length);
       }
 
+        let diffItemHandles = newValue - oldValue;
+        if (this.#actionType === 'moving') {
+          this.iconYear += diffItemHandles;
+        }
         if (this.#actionType === 'resizing' || this.#actionType === '') {
           const itemHandlersContainer = this.shadowRoot.querySelector('#item');
-          let diffItemHandles = newValue - oldValue;
 
           if (diffItemHandles > 0) {
             while (diffItemHandles > 0) {
@@ -186,16 +194,7 @@ export default class Event extends HTMLElement {
             }
           }
         }
-
-        let iconYear = this.iconYear;
-        if (iconYear != null && !isNaN(iconYear))
-        {
-          this.iconYear = iconYear + (newValue - oldValue);
-          // positionIcon gets called from attribute change handler of iconYear
-          // this.#positionIcon();
-        } else {
-          this.#positionIcon();
-        }
+        this.#positionIcon();
 
         this.dispatchEvent(new CustomEvent("startchanged", {detail: {start: newValue}, bubbles: true, composed: true}));
 
@@ -321,9 +320,7 @@ export default class Event extends HTMLElement {
           const itemIconNode = this.querySelector('a[slot="itemIcon"]');
           const column = e.target.dataset.handleIndex;
           itemIconNode.style.setProperty('grid-column', column);
-          this.#iconTargetIndex = parseInt(column);
-          // this.setAttribute('iconYear', (this.start + this.#iconTargetIndex - 1) + '');
-          this.iconYear = this.start + this.#iconTargetIndex - 1;
+          this.iconYear = this.start + parseInt(column) - 1;
 
           break;
         default: // if received while not in a state, it probably came from something else passing over it.
@@ -366,14 +363,7 @@ export default class Event extends HTMLElement {
     this.#iconBoundariesCorrection();
     itemIconNode.querySelector('img').setAttribute('draggable', false);
 
-    let iconIndex;
-    const iconYear = this.iconYear;
-    if (iconYear != null && !isNaN(iconYear)) {
-      iconIndex = this.iconYear - this.start + 1;
-    } else {
-      iconIndex = Math.floor((this.end - this.start) / __DEFAULT_ICON_POSITION__ + 1);
-    }
-
+    const iconIndex = this.iconYear - this.start + 1;
     if(iconIndex === 1) {
       itemIconNode.classList.add('widthOne');
     } else {
@@ -387,17 +377,31 @@ export default class Event extends HTMLElement {
 
     iconNode.addEventListener('dragstart', (e) => {
       this.#actionType = 'movingIcon';
+      this.#iconInitialYear = this.iconYear;
     });
 
     iconNode.addEventListener('dragend', (e) => {
       this.#actionType = '';
-      this.dispatchEvent(new CustomEvent('iconMoved', {bubbles: true, composed: true}));
+      if (this.#iconInitialYear === this.iconYear) return;
+
+      const from = {
+        start: this.start,
+        end: this.end,
+        iconYear: this.#iconInitialYear
+      };
+
+      const to = {
+        start: from.start,
+        end: from.end,
+        iconYear: this.iconYear
+      }
+
       this.dispatchEvent(new CustomEvent('ItemChanged', {detail:{
-          thirdOfTotal: this.#iconTargetIndex,
+        itemId: this.getAttribute('item-id'),
+        from: from,
+        to: to
         }, bubbles: true, composed: true}
       ));
-
-      this.#iconTargetIndex = undefined;
     });
   }
 
