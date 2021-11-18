@@ -46,14 +46,23 @@ export default class Timeline extends HTMLElement {
     this.draggable = false;
     const contentObserver = new MutationObserver((mutationsList) => {
       console.groupCollapsed("timeline_mutation")
+      const itemDragRedispatchHandlerRef = this.#timelineItemDragEnterRedispatch.bind(this);
 
       for (const mutationRecord of mutationsList) {
         if (mutationRecord.addedNodes.length > 0) {
           this.#renderItems();
 
           mutationRecord.addedNodes.forEach((node) => {
-            node.addEventListener('dragEnterExternal', this.#timelineItemDragEnterRedispatch.bind(this));
+            node.addEventListener('dragEnterExternal', itemDragRedispatchHandlerRef);
           });
+        }
+
+        if (mutationRecord.removedNodes.length > 0) {
+          mutationRecord.removedNodes.forEach((node) => {
+            node.removeEventListener('dragEnterExternal', itemDragRedispatchHandlerRef);
+          });
+
+          this.#renderItems();
         }
       }
 
@@ -320,16 +329,16 @@ export default class Timeline extends HTMLElement {
   #renderItems() {
     const items = this.getElementsByTagName('ata-timeline-item');
 
+    const currentNumRows = parseInt(this.shadowRoot.host.style.getPropertyValue('--rows'));
     const rows = this.#assignRows();
 
-    if (this.#newItemDragState.isDraggingNewItem) {
+    if (!(this.#isDragging() && rows.length < currentNumRows)) {
       const numRows = (rows.length > 0 ? rows.length : 1);
       this.shadowRoot.host.style.setProperty('--rows', numRows);
       this.shadowRoot.querySelectorAll('.dropTarget').forEach((dropTarget) => {
         dropTarget.style.setProperty('grid-row-end', numRows + ROW_OFFSET);
       });
     }
-
 
     for (const item of items) {
       item.setAttribute('slot', 'items');
@@ -384,56 +393,15 @@ export default class Timeline extends HTMLElement {
       this.#dragChildEvent = e;
     });
     this.addEventListener('moveEnd', () => {
-      const from = {
-        start: this.#dragChildEvent.detail.fromStart,
-        end: this.#dragChildEvent.detail.fromEnd,
-        iconYear: this.#dragChildEvent.detail.iconYear
-      };
-
-      const to = {
-        start: parseInt(this.#dragChildEvent.target.getAttribute('start')),
-        end: parseInt(this.#dragChildEvent.target.getAttribute('end')),
-        iconYear: from.iconYear
-      }
-
-      if (from.start !== to.start || from.end !== to.end) {
-        this.dispatchEvent(new CustomEvent('ItemChanged', {detail: {
-            itemId: this.#dragChildEvent.target.getAttribute('item-id'),
-            from: from,
-            to: to,
-          }}));
-      }
-
-
       this.#dragChildEvent = null;
+      this.#renderItems();
     });
     this.addEventListener('resizeStart', (e) => {
       this.#resizeChildEvent = e;
     });
     this.addEventListener('resizeEnd', () => {
-      const from = {
-        start: this.#resizeChildEvent.detail.fromStart,
-        end: this.#resizeChildEvent.detail.fromEnd,
-        iconYear: this.#resizeChildEvent.detail.iconYear
-      };
-
-      const to = {
-        start: parseInt(this.#resizeChildEvent.target.getAttribute('start')),
-        end: parseInt(this.#resizeChildEvent.target.getAttribute('end')),
-        iconYear: from.iconYear
-      }
-
-      if (from.start !== to.start || from.end !== to.end) {
-        this.dispatchEvent(new CustomEvent('ItemChanged', {
-          detail: {
-            itemId: this.#resizeChildEvent.target.getAttribute('item-id'),
-            from: from,
-            to: to,
-          }
-        }));
-      }
-
       this.#resizeChildEvent = null;
+      this.#renderItems()
     })
     /*
     | -------------------------------------------- */
@@ -548,6 +516,14 @@ export default class Timeline extends HTMLElement {
     Timeline.#consoleLogRows(rows)
 
     return rows;
+  }
+
+  #isDragging() {
+    return (
+        this.#dragChildEvent !== null ||
+        this.#resizeChildEvent !== null ||
+        this.#newItemDragState.isDraggingNewItem
+    );
   }
 
   static #consoleLogRows(rows) {

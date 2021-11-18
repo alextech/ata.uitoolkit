@@ -26,14 +26,14 @@ export default class Event extends HTMLElement {
 
   #moveIndex = -1;
 
-  #originalStart;
-  #originalEnd;
-
   #actionType;
   #actionDirection;
   #rightDragNode;
 
-  #iconInitialYear;
+  /**
+   * @var OriginalState
+   */
+  #originalState;
 
   constructor() {
     super();
@@ -91,13 +91,13 @@ export default class Event extends HTMLElement {
       this.#actionType = 'resizing';
       this.#actionDirection = 'right';
 
-      this.#originalStart = this.start;
-      this.#originalEnd = this.end;
+      this.#captureOriginalState();
+
       this.dispatchEvent(new CustomEvent('resizeStart', {detail: {
         eventId: this.getAttribute('event-id'),
         direction: 'right',
-        fromStart: this.#originalStart,
-        fromEnd: this.#originalEnd,
+        fromStart: this.#originalState.start,
+        fromEnd: this.#originalState.end,
         handleIndex: parseInt(e.target.dataset.handleIndex)
       }, bubbles: true, composed: true}))
     });
@@ -111,9 +111,8 @@ export default class Event extends HTMLElement {
     itemRight.addEventListener('dragend',  () => {
       this.#actionType = '';
 
-      this.dispatchEvent(new CustomEvent('resizeEnd', {detail: {
-        eventId: this.getAttribute('event-id'),
-      }, bubbles: true, composed: true}));
+      this.dispatchEvent(new CustomEvent('resizeEnd', { bubbles: true, composed: true}));
+      this.#dispatchItemChanged();
     });
 
 
@@ -127,22 +126,22 @@ export default class Event extends HTMLElement {
       this.#actionType = 'resizing';
       this.#actionDirection = 'left';
 
-      this.#originalStart = this.start;
-      this.#originalEnd = this.end;
+      this.#captureOriginalState();
+
       this.dispatchEvent(new CustomEvent('resizeStart', {detail: {
         eventId: this.getAttribute('event-id'),
         direction: 'left',
-        fromStart: this.#originalStart,
-        fromEnd: this.#originalEnd,
+        fromStart: this.#originalState.start,
+        fromEnd: this.#originalState.end,
         handleIndex: parseInt(e.target.dataset.handleIndex)
       }, bubbles: true, composed: true}));
     });
+
     itemLeft.addEventListener('dragend',  () => {
       this.#actionType = '';
 
-      this.dispatchEvent(new CustomEvent('resizeEnd', {detail: {
-        eventId: this.getAttribute('event-id'),
-      }, bubbles: true, composed: true}));
+      this.dispatchEvent(new CustomEvent('resizeEnd', { bubbles: true, composed: true}));
+      this.#dispatchItemChanged();
     });
     itemLeft.addEventListener('dragenter', (e) => {
       e.preventDefault();
@@ -274,11 +273,12 @@ export default class Event extends HTMLElement {
       this.#actionType = 'moving';
 
       e.dataTransfer.effectAllowed = 'move';
-      this.#originalStart = this.start;
-      this.#originalEnd = this.end;
+
+      this.#captureOriginalState();
+
       this.dispatchEvent(new CustomEvent('moveStart', {detail: {
-          fromStart: this.#originalStart,
-          fromEnd: this.#originalEnd,
+          fromStart: this.#originalState.start,
+          fromEnd: this.#originalState.end,
           handleIndex: parseInt(e.target.dataset.handleIndex),
         }, bubbles: true, composed: true}));
 
@@ -290,10 +290,11 @@ export default class Event extends HTMLElement {
       console.groupEnd();
 
       this.dispatchEvent(new CustomEvent('moveEnd', {bubbles: true, composed: true}));
+      this.#dispatchItemChanged();
 
       this.#actionType = '';
-
       this.#moveIndex = -1;
+      this.#originalState = undefined;
     });
 
     dragNode.addEventListener('dragenter', (e) => {
@@ -356,6 +357,36 @@ export default class Event extends HTMLElement {
   }
 
 
+  #captureOriginalState() {
+    const originalState = new OriginalState();
+    originalState.start = this.start;
+    originalState.end = this.end;
+    originalState.iconYear = this.iconYear;
+
+    this.#originalState = originalState;
+  }
+
+  #dispatchItemChanged() {
+    const to = {
+      start: this.start,
+      end: this.end,
+      iconYear: this.iconYear
+    }
+
+    if (
+        this.#originalState.start !== to.start ||
+        this.#originalState.end !== to.end ||
+        this.#originalState.iconYear !== to.iconYear
+    ) {
+
+      this.dispatchEvent(new CustomEvent('ItemChanged', {detail: {
+          itemId: this.getAttribute('item-id'),
+          from: this.#originalState,
+          to: to,
+        }, bubbles: true, composed: true}));
+    }
+  }
+
   #positionIcon() {
     const itemIconNode = this.querySelector('a[slot="itemIcon"]');
     if (itemIconNode === null) return;
@@ -377,31 +408,14 @@ export default class Event extends HTMLElement {
 
     iconNode.addEventListener('dragstart', (e) => {
       this.#actionType = 'movingIcon';
-      this.#iconInitialYear = this.iconYear;
+      this.#captureOriginalState();
     });
 
     iconNode.addEventListener('dragend', (e) => {
       this.#actionType = '';
-      if (this.#iconInitialYear === this.iconYear) return;
+      if (this.#originalState.iconYear === this.iconYear) return;
 
-      const from = {
-        start: this.start,
-        end: this.end,
-        iconYear: this.#iconInitialYear
-      };
-
-      const to = {
-        start: from.start,
-        end: from.end,
-        iconYear: this.iconYear
-      }
-
-      this.dispatchEvent(new CustomEvent('ItemChanged', {detail:{
-        itemId: this.getAttribute('item-id'),
-        from: from,
-        to: to
-        }, bubbles: true, composed: true}
-      ));
+      this.#dispatchItemChanged();
     });
   }
 
@@ -434,6 +448,12 @@ export default class Event extends HTMLElement {
     return parseInt(this.getAttribute('iconYear'));
   }
 
+}
+
+class OriginalState {
+  start;
+  end;
+  iconYear;
 }
 
 if(!customElements.get('ata-timeline-item')) {
