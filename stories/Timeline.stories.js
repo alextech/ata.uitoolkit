@@ -17,6 +17,7 @@ const TimelineTemplate = (args) => {
       years="${args.years}"
       startingYear="${args.startingYear}"
       age="${args.age}"
+      ${args.hasOwnProperty('disabled') ? 'disabled' : ''}
   >`;
 
   let i = 1;
@@ -70,16 +71,25 @@ TimelineWithItem.args = {
       item_id: "sample_1",
       item_name: "sample 1",
       icon: item_1_Icon
-    },
-    // {
-    //   start: 2035,
-    //   end: 2041,
-    //   item_id: "sample_2",
-    //   item_name: "sample 2",
-    //   icon: item_1_Icon
-    // },
+    }
   ],
+};
+export const DisabledTimeline = TimelineTemplate.bind({});
+DisabledTimeline.args = {
+  years: 35,
+  age: 34,
+  startingYear: 2021,
+  disabled: true,
 
+  items: [
+    {
+      start: 2025,
+      end: 2033,
+      item_id: "sample_1",
+      item_name: "sample 1",
+      icon: item_1_Icon
+    }
+  ],
 };
 
 export const OverlappingItems = TimelineTemplate.bind({});

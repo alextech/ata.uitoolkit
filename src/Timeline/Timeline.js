@@ -18,7 +18,7 @@ function generateId() {
 
 export default class Timeline extends HTMLElement {
   static get observedAttributes() {
-    return ['years', 'startingyear', 'age'];
+    return ['years', 'startingyear', 'age', 'data-disabled', 'disabled'];
   }
 
   #previousYears;
@@ -53,6 +53,9 @@ export default class Timeline extends HTMLElement {
           this.#renderItems();
 
           mutationRecord.addedNodes.forEach((node) => {
+            if (this.dataset.disabled !== null) {
+              node.setAttribute('disabled');
+            }
             node.addEventListener('dragEnterExternal', itemDragRedispatchHandlerRef);
           });
         }
@@ -95,6 +98,18 @@ export default class Timeline extends HTMLElement {
         this.#renderItems();
 
         break;
+
+      case 'data-disabled':
+      case 'disabled':
+        this.querySelectorAll('ata-timeline-item').forEach(item => {
+          if (newValue != null) {
+            item.setAttribute('disabled', 'true');
+          } else {
+            item.removeAttribute('disabled');
+          }
+        });
+
+        break;
     }
   }
 
@@ -134,6 +149,8 @@ export default class Timeline extends HTMLElement {
       dropTarget.dataset.year = (currentYear++)+'';
 
       dropTarget.addEventListener('dragstart', (e) => {
+        if (this.dataset.disabled !== null) return;
+
         console.group("new placeholder");
         console.info("new placeholder node dragstart");
 
@@ -169,6 +186,7 @@ export default class Timeline extends HTMLElement {
       dropTarget.addEventListener('dragenter', this.#dragEnterHandler.bind(this));
 
       dropTarget.addEventListener('click', (e) => {
+        if (this.disabled) return;
 
         const start = parseInt(e.target.dataset.year), end = start;
 
@@ -563,6 +581,19 @@ export default class Timeline extends HTMLElement {
 
   get startingYear() {
     return parseInt(this.getAttribute('startingYear'));
+  }
+
+  set disabled(isDisabled) {
+    if (isDisabled) {
+      this.setAttribute('disabled', '');
+    } else {
+      this.removeAttribute('disabled');
+      this.dataset.disabled = null;
+    }
+  }
+
+  get disabled() {
+    return this.hasAttribute('disabled') || this.dataset.disabled !== null;
   }
 }
 

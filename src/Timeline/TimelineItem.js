@@ -88,6 +88,8 @@ export default class Event extends HTMLElement {
     \* ------------------------------------- */
     const itemRight = this.shadowRoot.querySelector('#itemRight');
     itemRight.addEventListener('dragstart',  (e) => {
+      if (this.hasAttribute('disabled')) return;
+
       this.#actionType = 'resizing';
       this.#actionDirection = 'right';
 
@@ -123,6 +125,8 @@ export default class Event extends HTMLElement {
     \* ------------------------------------- */
     const itemLeft = this.shadowRoot.querySelector('#itemLeft');
     itemLeft.addEventListener('dragstart',  (e) => {
+      if (this.hasAttribute('disabled')) return;
+
       this.#actionType = 'resizing';
       this.#actionDirection = 'left';
 
@@ -267,6 +271,8 @@ export default class Event extends HTMLElement {
     |
     \* ------------------------------------- */
     dragNode.addEventListener('dragstart', (e) => {
+      if (this.hasAttribute('disabled')) return;
+
       console.group("timeline moving");
       console.info("timeline node dragstart");
 
@@ -407,6 +413,8 @@ export default class Event extends HTMLElement {
     if(iconNode == null) return;
 
     iconNode.addEventListener('dragstart', (e) => {
+      if (this.hasAttribute('disabled')) return;
+
       this.#actionType = 'movingIcon';
       this.#captureOriginalState();
     });
@@ -446,6 +454,18 @@ export default class Event extends HTMLElement {
 
   get iconYear() {
     return parseInt(this.getAttribute('iconYear'));
+  }
+
+  set disable(isDisabled) {
+    if (isDisabled) {
+      this.setAttribute('disabled', '');
+    } else {
+      this.removeAttribute('disabled');
+    }
+  }
+
+  get disabled() {
+    return this.hasAttribute('disabled') || this.dataset.disabled !== null;
   }
 
 }
