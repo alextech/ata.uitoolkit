@@ -53,7 +53,9 @@ export default class Timeline extends HTMLElement {
           this.#renderItems();
 
           mutationRecord.addedNodes.forEach((node) => {
-            if (this.dataset.disabled !== null) {
+            if(node.nodeName !== 'ata-timeline-item') return;
+
+            if (this.disabled) {
               node.setAttribute('disabled');
             }
             node.addEventListener('dragEnterExternal', itemDragRedispatchHandlerRef);
@@ -149,7 +151,7 @@ export default class Timeline extends HTMLElement {
       dropTarget.dataset.year = (currentYear++)+'';
 
       dropTarget.addEventListener('dragstart', (e) => {
-        if (this.dataset.disabled !== null) return;
+        if (this.disabled) return;
 
         console.group("new placeholder");
         console.info("new placeholder node dragstart");
@@ -588,12 +590,12 @@ export default class Timeline extends HTMLElement {
       this.setAttribute('disabled', '');
     } else {
       this.removeAttribute('disabled');
-      this.dataset.disabled = null;
+      delete this.dataset.disabled;
     }
   }
 
   get disabled() {
-    return this.hasAttribute('disabled') || this.dataset.disabled !== null;
+    return this.hasAttribute('disabled') || this.dataset.disabled !== undefined;
   }
 }
 
