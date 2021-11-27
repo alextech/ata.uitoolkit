@@ -18,10 +18,11 @@ eventTpl.innerHTML = `
 `;
 
 const __DEFAULT_ICON_POSITION__ = 3;
+const __DRAGGABLE_CSS_SELECTOR__ = '.itemLeft, .itemRight, .dragHandler, .iconDragNode';
 
 export default class Event extends HTMLElement {
   static get observedAttributes() {
-    return ['start', 'end', 'iconyear'];
+    return ['start', 'end', 'iconyear', 'disabled'];
   }
 
   #moveIndex = -1;
@@ -155,14 +156,24 @@ export default class Event extends HTMLElement {
     });
 
     const itemIconNode = this.querySelector('a[slot="itemIcon"]');
-    this.#iconNodeDragEvents(itemIconNode)
+    this.#iconNodeDragEvents(itemIconNode);
+
+    const isDisabled = this.disabled;
+    this.shadowRoot.querySelectorAll(__DRAGGABLE_CSS_SELECTOR__).forEach(node => {
+      node.draggable = !isDisabled;
+    });
+    this.querySelectorAll(__DRAGGABLE_CSS_SELECTOR__).forEach(node => {
+      node.draggable = !isDisabled;
+    })
   }
 
   attributeChangedCallback(attribute, oldValue, newValue) {
     if (oldValue === newValue) return;
-    oldValue = parseInt(oldValue);
-    newValue = parseInt(newValue);
-    if(isNaN(newValue)) return;
+    if(attribute !== 'disabled') {
+      oldValue = parseInt(oldValue);
+      newValue = parseInt(newValue);
+      if (isNaN(newValue)) return;
+    }
 
 
     switch (attribute) {
@@ -233,6 +244,16 @@ export default class Event extends HTMLElement {
         break;
       case 'iconyear':
         this.#positionIcon();
+
+        break;
+      case 'disabled':
+        newValue = (newValue == null || newValue === "" || newValue === "true");
+        this.shadowRoot.querySelectorAll(__DRAGGABLE_CSS_SELECTOR__).forEach(node => {
+          node.draggable = !newValue;
+        });
+        this.querySelectorAll(__DRAGGABLE_CSS_SELECTOR__).forEach(node => {
+          node.draggable = !newValue;
+        })
 
         break;
     }
@@ -412,6 +433,7 @@ export default class Event extends HTMLElement {
   #iconNodeDragEvents(iconNode) {
     if(iconNode == null) return;
 
+    iconNode.className = 'iconDragNode';
     iconNode.addEventListener('dragstart', (e) => {
       if (this.hasAttribute('disabled')) return;
 
@@ -465,7 +487,7 @@ export default class Event extends HTMLElement {
   }
 
   get disabled() {
-    return this.hasAttribute('disabled') || this.dataset.disabled !== null;
+    return this.hasAttribute('disabled') || this.dataset.disabled !== undefined;
   }
 
 }

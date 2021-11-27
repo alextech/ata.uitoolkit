@@ -103,8 +103,14 @@ export default class Timeline extends HTMLElement {
 
       case 'data-disabled':
       case 'disabled':
+        // empty or null IS disabled
+        newValue = (newValue == null || newValue === "" || newValue === "true");
+        this.shadowRoot.querySelectorAll('.dropTarget').forEach(handler => {
+          handler.draggable = !newValue;
+        });
+
         this.querySelectorAll('ata-timeline-item').forEach(item => {
-          if (newValue != null) {
+          if (newValue) {
             item.setAttribute('disabled', 'true');
           } else {
             item.removeAttribute('disabled');
@@ -151,8 +157,6 @@ export default class Timeline extends HTMLElement {
       dropTarget.dataset.year = (currentYear++)+'';
 
       dropTarget.addEventListener('dragstart', (e) => {
-        if (this.disabled) return;
-
         console.group("new placeholder");
         console.info("new placeholder node dragstart");
 
