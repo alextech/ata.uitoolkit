@@ -18,7 +18,7 @@ eventTpl.innerHTML = `
 `;
 
 const __DEFAULT_ICON_POSITION__ = 3;
-const __DRAGGABLE_CSS_SELECTOR__ = '.itemLeft, .itemRight, .dragHandler, .iconDragNode';
+const __DRAGGABLE_CSS_SELECTOR__ = '#itemLeft, #itemRight, .dragHandler, .iconDragNode';
 
 export default class Event extends HTMLElement {
   static get observedAttributes() {

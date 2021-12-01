@@ -24,7 +24,13 @@
     grid-column-end: calc(var(--length) + 1);
     grid-row: 2;
 
+    border: solid royalblue;
+    border-left: 3px solid royalblue;
+    border-right: 3px solid royalblue;
+    box-shadow: rgb(13 56 88 / 48%) 0px 1px 4px 1px;
     background-color: cornflowerblue;
+
+
   }
 
   #itemLeft {
@@ -44,9 +50,10 @@
   #itemRight {
     grid-row: 2/3;
     z-index: 102;
-    cursor: col-resize;
 
-    background-color: red;
+    &[draggable="true"] {
+      cursor: col-resize;
+    }
   }
 
   ::slotted(a) {
