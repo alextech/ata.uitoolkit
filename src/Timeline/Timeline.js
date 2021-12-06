@@ -18,7 +18,7 @@ function generateId() {
 
 export default class Timeline extends HTMLElement {
   static get observedAttributes() {
-    return ['years', 'startingyear', 'age', 'data-disabled', 'disabled'];
+    return ['years', 'startingyear', 'age', 'disabled'];
   }
 
   #previousYears;
@@ -101,7 +101,6 @@ export default class Timeline extends HTMLElement {
 
         break;
 
-      case 'data-disabled':
       case 'disabled':
         // empty or null IS disabled
         newValue = (newValue == null || newValue === "" || newValue === "true");
