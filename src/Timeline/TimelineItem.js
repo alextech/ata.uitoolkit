@@ -18,9 +18,9 @@ eventTpl.innerHTML = `
 `;
 
 const __DEFAULT_ICON_POSITION__ = 3;
-const __DRAGGABLE_CSS_SELECTOR__ = '#itemLeft, #itemRight, .dragHandler, .iconDragNode';
+const __DRAGGABLE_CSS_SELECTOR__ = '#itemLeft, #itemRight, .dragHandler, .iconDragNode, a[slot="itemIcon"]';
 
-export default class Event extends HTMLElement {
+export default class TimelineItem extends HTMLElement {
   static get observedAttributes() {
     return ['start', 'end', 'iconyear', 'disabled'];
   }
@@ -499,5 +499,5 @@ class OriginalState {
 }
 
 if(!customElements.get('ata-timeline-item')) {
-  customElements.define('ata-timeline-item', Event);
+  customElements.define('ata-timeline-item', TimelineItem);
 }

@@ -53,10 +53,10 @@ export default class Timeline extends HTMLElement {
           this.#renderItems();
 
           mutationRecord.addedNodes.forEach((node) => {
-            if(node.nodeName !== 'ata-timeline-item') return;
+            if(node.nodeName !== 'ATA-TIMELINE-ITEM') return;
 
             if (this.disabled) {
-              node.setAttribute('disabled');
+              node.setAttribute('disabled', '');
             }
             node.addEventListener('dragEnterExternal', itemDragRedispatchHandlerRef);
           });
