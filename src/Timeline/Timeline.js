@@ -103,7 +103,8 @@ export default class Timeline extends HTMLElement {
 
       case 'disabled':
         // empty or null IS disabled
-        newValue = (newValue == null || newValue === "" || newValue === "true");
+        // possibly enabled
+        newValue = (newValue != null  && (newValue !== 'false'));
         this.shadowRoot.querySelectorAll('.dropTarget').forEach(handler => {
           handler.draggable = !newValue;
         });
@@ -598,7 +599,7 @@ export default class Timeline extends HTMLElement {
   }
 
   get disabled() {
-    return this.hasAttribute('disabled') || this.dataset.disabled !== undefined;
+    return this.hasAttribute('disabled') && this.getAttribute('disabled') !== 'false';
   }
 }
 
